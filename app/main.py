@@ -6,7 +6,7 @@ from collections import defaultdict
 
 app = FastAPI()
 
-IMAGES_DIR = "./keyframes"
+IMAGES_DIR = "../data/keyframes"
 IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')
 
 
