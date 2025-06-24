@@ -1,4 +1,4 @@
-﻿# Multimodal-RAG
+# Multimodal-RAG
 
 **Step-by-Step: Running a Multimodal-RAG Project (FastAPI + React)**
 
@@ -11,19 +11,7 @@
 
 ---
 
-## **1. Install Node.js/React Dependencies**
-
-In your project folder:
-
-```bash
-npm install
-```
-
-This installs all frontend dependencies listed in `package.json`.
-
----
-
-## **2. Install Python Dependencies**
+## **1. Install Python Dependencies**
 
 Open your **terminal** (or Command Prompt/PowerShell on Windows):
 
@@ -58,30 +46,43 @@ pip install -r requirements.txt
 
 ---
 
-## **3. Start the FastAPI Backend**
+## **2. Install Node.js/React Dependencies**
 
-* **Activate your virtual environment again** (see step 2 if unsure).
-
-Then run:
+In your project folder:
 
 ```bash
-uvicorn main:app --reload
+npm install
 ```
 
-* The FastAPI server runs by default at [http://localhost:8000](http://localhost:8000)
+This installs all frontend dependencies listed in `package.json`.
 
 ---
----
 
-## **4. Start the React Frontend**
+## **3. Start the React Frontend**
 
-Open **another terminal** (so your backend keeps running)::
+In your project folder (make sure the virtual environment is still active if your frontend requires it):
 
 ```bash
 npm start
 ```
 
 * This usually runs at [http://localhost:3000](http://localhost:3000)
+
+---
+
+## **4. Start the FastAPI Backend**
+
+Open **another terminal** (so your frontend keeps running):
+
+* **Activate your virtual environment again** (see step 1 if unsure).
+
+Then run:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+* The FastAPI server runs by default at [http://localhost:8000](http://localhost:8000)
 
 ---
 
