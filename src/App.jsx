@@ -1,23 +1,18 @@
+import imageScene from "./assets/imageScene.jpeg";
 import LeftPanel from "./components/LeftPanel";
-import ImageGridRow from "./components/ImageGridRow";
-import { rows } from "./data/dummyData";
+import RightPanel from "./components/RightPanel";
+
+const rows = [
+  { grid: Array(10).fill(imageScene), preview: imageScene },
+  { grid: Array(4).fill(imageScene), preview: imageScene },
+  { grid: Array(7).fill(imageScene), preview: imageScene },
+];
 
 function App() {
   return (
-    <div className="flex h-screen">
+    <div className="flex flex-col lg:flex-row h-screen">
       <LeftPanel />
-      <div className="w-5/6 overflow-auto p-2 space-y-4">
-        {rows.map((row, idx) => (
-          <div
-            key={idx}
-            className={`${
-              idx !== rows.length - 1 ? "border-b-4 border-gray-300" : ""
-            }`}
-          >
-            <ImageGridRow grid={row.grid} preview={row.preview} />
-          </div>
-        ))}
-      </div>
+      <RightPanel rows={rows} />
     </div>
   );
 }
