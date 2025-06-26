@@ -1,8 +1,10 @@
 # else
 
 keyframes/
-data-batch-1/
-data/
+data_large/
+data_small/
+*.pkl
+volumes/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

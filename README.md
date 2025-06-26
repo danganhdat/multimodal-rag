@@ -4,16 +4,39 @@
 
 ---
 
-## **0. Prerequisites**
+## **Prerequisites**
 
-* **Python**
-* **npm**
+* **Install Docker Desktop.**
+* **Install Windows Subsystem for Linux 2 (WSL 2).**
+* **Install Python 3.8+.**
+* **Install Node.js**
 
 ---
 
-## **1. Install Python Dependencies**
+## **Run Milvus with Docker Compose**
 
-Open your **terminal** (or Command Prompt/PowerShell on Windows):
+From PowerShell or Windows Command Prompt
+
+1. Open Docker Desktop in administrator mode by right-clicking and selecting Run as administrator.
+
+2. Run the following commands in PowerShell or Windows Command Prompt to download the Docker Compose configuration file for Milvus Standalone and start Milvus.
+
+```bash
+# Download the configuration file and rename it as docker-compose.yml
+C:\>Invoke-WebRequest https://github.com/milvus-io/milvus/releases/download/v2.4.15/milvus-standalone-docker-compose.yml -OutFile docker-compose.yml
+
+# Start Milvus
+C:\>docker compose up -d
+Creating milvus-etcd  ... done
+Creating milvus-minio ... done
+Creating milvus-standalone ... done
+# Stop Milvus
+C:\>docker compose stop
+```
+---
+## **Install Python Dependencies**
+
+Open **new terminal** (or Command Prompt/PowerShell on Windows):
 
 ```bash
 python -m pip install --upgrade pip
