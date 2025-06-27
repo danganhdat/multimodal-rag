@@ -74,7 +74,9 @@ pip install -r requirements.txt
 In your project folder:
 
 ```bash
-npm install
+npx create-react-app my-app
+cd frontend
+npm install -D tailwindcss postcss autoprefixer 
 ```
 
 This installs all frontend dependencies listed in `package.json`.
@@ -86,6 +88,7 @@ This installs all frontend dependencies listed in `package.json`.
 In your project folder (make sure the virtual environment is still active if your frontend requires it):
 
 ```bash
+nom run build
 npm start
 ```
 
