@@ -7,15 +7,10 @@ import pickle
 from clip_encoder import ClipEncoder
 from pymilvus import MilvusClient, connections
 
-connections.connect(
-    alias="default",
-    uri="http://localhost:19530",
-)
-
 # --- Configuration ---
 COLLECTION_NAME = "clip_image_collection"
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "data", "keyframes"))
-print(BASE_DIR)
+
 # --- Initialize FastAPI ---
 app = FastAPI()
 
@@ -42,11 +37,8 @@ milvus_client.create_collection(
     enable_dynamic_field=True,
 )
 
-with open("aic_2023_clip.pkl", 'rb') as f:
-    clip_embed_data = pickle.load(f)
-
 # Perform insertion and capture response
-for i in range(1):
+for i in range(18):
     chunk_filename = f"aic_2023_clip_{i+1}.pkl"
     with open(chunk_filename, 'rb') as f:
         chunk_data = pickle.load(f)
@@ -55,10 +47,9 @@ for i in range(1):
         collection_name=COLLECTION_NAME,
         data=chunk_data
     )
-print(chunk_data[0])
 # Check insert result for IDs or status
-if insert_result.get("insert_count", 0) > 0:
-    print(f"Successfully inserted {insert_result['insert_count']} items.")
+if milvus_client.get("insert_count", 0) > 0:
+    print(f"Successfully inserted {milvus_client['insert_count']} items.")
 else:
     print("Insertion failed or no data inserted.")
 
