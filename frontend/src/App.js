@@ -20,10 +20,15 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query, limit: 30 }), // adjust limit as you wish
       });
+      if (!resp.ok) {
+        // Handle HTTP errors like 4xx, 5xx
+        const errorData = await resp.json().catch(() => ({ detail: "Unknown server error" })); // Try to parse error, fallback
+        throw new Error(`Server error: ${resp.status} ${resp.statusText} - ${errorData.detail || 'No details'}`);
+      }
       const data = await resp.json();
-      // Backend key is "filepath "
-      const filepaths = data["filepath "] || [];
-      const fullUrls = filepaths.map(fp => API_IMAGE + fp);
+      // Backend key is now "filepaths"
+      const filepaths = data.filepaths || [];
+      const fullUrls = filepaths.map(fp => `${API_IMAGE}${encodeURIComponent(fp)}`);
       setImages(fullUrls);
       setPreview(fullUrls[0] || null);
     } catch (err) {

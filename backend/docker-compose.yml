@@ -59,6 +59,27 @@ services:
     depends_on:
       - "etcd"
       - "minio"
+    networks:
+      - default
+
+  fastapi_app:
+    container_name: fastapi_app
+    build:
+      context: .
+      dockerfile: Dockerfile  # We will create this Dockerfile in the next step
+    ports:
+      - "8000:8000"
+    environment:
+      MILVUS_HOST: "standalone"
+      MILVUS_PORT: "19530"
+      # Add any other environment variables your FastAPI app might need
+    volumes:
+      - .:/app  # Mounts the backend directory into /app in the container for development
+                # For production, you might prefer to COPY the code in the Dockerfile and not use a volume
+    depends_on:
+      - standalone
+    networks:
+      - default
 
 networks:
   default:
