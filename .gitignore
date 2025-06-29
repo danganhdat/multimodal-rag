@@ -1,10 +1,11 @@
 # else
 
+data/
 keyframes/
-data_large/
-data_small/
-*.pkl
+*.jpg
 volumes/
+# embeddings/
+# *.pkl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

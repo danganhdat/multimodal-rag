@@ -1,24 +1,21 @@
-from fastapi import FastAPI, HTTPException, Query, Request, Response
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
+from pymilvus import AnnSearchRequest, RRFRanker, MilvusClient
+
 from pydantic import BaseModel
+from typing import List, Optional
+from clip_encoder import ClipEncoder
+
 import os
 import pickle
-from clip_encoder import ClipEncoder
-from pymilvus import MilvusClient, connections
 
-# --- Configuration ---
-COLLECTION_NAME = "clip_image_collection"
-BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+# --- CONFIG ---
+COLLECTION_NAME = "clip_images"
+IMAGES_DIR = os.path.abspath("../data/keyframes")
 
-# IMAGES_DIR = "../data/keyframes"
-IMAGES_DIR = os.path.abspath("../data/keyframes")  # Always use absolute path!
-IMAGE_EXTENSIONS = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.webp')
-
-# --- Initialize FastAPI ---
+# --- APP INIT ---
 app = FastAPI()
-
-# CORS middleware setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -26,74 +23,146 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Initialize components ---
 encoder = ClipEncoder()
 milvus_client = MilvusClient(uri="http://localhost:19530")
+ranker = RRFRanker(100)
 
-# --- Milvus Collection Initialization ---
+# --- MILVUS SETUP (ONE-TIME) ---
 if milvus_client.has_collection(COLLECTION_NAME):
     milvus_client.drop_collection(COLLECTION_NAME)
-
 milvus_client.create_collection(
     collection_name=COLLECTION_NAME,
     dimension=512,
-    auto_id=True,
-    enable_dynamic_field=True,
+    auto_id=True
 )
+for i in range(9):
+    with open(f"embeddings/aic_2023_clip_{i}.pkl", "rb") as f:
+        data = pickle.load(f)
+    milvus_client.insert(collection_name=COLLECTION_NAME, data=data)
 
-# Perform insertion and capture response
-for i in range(18):
-    chunk_filename = f"embeddings/aic_2023_clip_{i+1}.pkl"
-    with open(chunk_filename, 'rb') as f:
-        chunk_data = pickle.load(f)
+# --- MODELS ---
+class Address(BaseModel):
+    folder_name: str
+    image_name: str
 
-    insert_result = milvus_client.insert(
-        collection_name=COLLECTION_NAME,
-        data=chunk_data
-    )
-
-print(milvus_client.get_collection_stats(COLLECTION_NAME))
-
-# --- Request Models ---
 class SearchRequest(BaseModel):
-    query: str
+    queries: List[str]
     limit: int = 10
 
-# --- API Routes ---
+class SurroundingsRequest(BaseModel):
+    addresses: List[Address]
+    window: int = 10
+
+# --- ROUTES ---
+
 @app.get("/")
-async def get_hello():
-    return {"message": "Hello, welcome to the CLIP Image Search API!"}
+async def root():
+    return {"message": "Hello world!"}
 
-@app.get("/image/{rel_path:path}")
-async def get_image(rel_path: str):
-    images_dir = os.path.normpath(IMAGES_DIR)
-    safe_path = os.path.normpath(os.path.abspath(os.path.join(images_dir, rel_path)))
-
-    if not safe_path.startswith(IMAGES_DIR):
-        raise HTTPException(status_code=403, detail="Access denied.")
-    if not os.path.isfile(safe_path):
-        raise HTTPException(status_code=404, detail="Image not found.")
-    return FileResponse(safe_path)
-
-@app.post("/search/")
-async def search_images(req: SearchRequest):
-    query_embedding = encoder.encode_text(req.query)
-
-    search_results = milvus_client.search(
+@app.post("/search", response_model=List[Address])
+def search(request: SearchRequest):
+    """
+    Search for keyframes by a single query.
+    """
+    embedding = encoder.encode_text(request.queries[0])
+    results = milvus_client.search(
         collection_name=COLLECTION_NAME,
-        data=[query_embedding],
-        limit=req.limit,
+        data=[embedding],
+        limit=request.limit,
         output_fields=["filepath"],
+        params={"metric_type": "L2", "params": {}}
     )
-    
-    results = []
-    for result in search_results:
-        for hit in result:
-            filepath = hit["entity"]["filepath"]
-            results.append(filepath)
-    return JSONResponse({"filepath ": results})
+    addresses = []
+    for result in results[0]:
+    # for hit in result:
+        filepath = result["entity"]["filepath"]
+        if filepath and "/" in filepath:
+            folder, image = filepath.split("/", 1)
+            addresses.append(Address(folder_name=folder, image_name=image))
+    return addresses
 
-# --- Entry Point ---
+@app.post("/search_hybrid", response_model=List[Address])
+def search_hybrid(request: SearchRequest):
+    """
+    Perform a hybrid (multi-query) search using Reciprocal Rank Fusion (RRF).
+    Returns up to `limit` unique Address objects, ranked by fusion.
+    """
+    # Prepare an AnnSearchRequest for each query string
+    reqs = [
+        AnnSearchRequest(
+            data=[encoder.encode_text(query)],
+            anns_field="vector",   # Make sure your Milvus schema matches this field
+            param={},
+            limit=request.limit
+        )
+        for query in request.queries
+    ]
+    # Run hybrid search with rank fusion
+    res = milvus_client.hybrid_search(
+        collection_name=COLLECTION_NAME,
+        reqs=reqs,
+        ranker=ranker,
+        limit=request.limit,
+        output_fields=["filepath"]
+    )
+
+    addresses = []
+    seen = set()
+    # Defensive: Check for results, iterate over hits
+    hits = res[0] if res and len(res) > 0 else []
+    for hit in hits:
+        # Safely extract filepath from entity (object or dict)
+        if hasattr(hit, "entity") and hasattr(hit.entity, "filepath"):
+            filepath = hit.entity.filepath
+        else:
+            filepath = hit.get("entity", {}).get("filepath")
+        if filepath and "/" in filepath and filepath not in seen:
+            folder, image = filepath.split("/", 1)
+            addresses.append(Address(folder_name=folder, image_name=image))
+            seen.add(filepath)
+        if len(addresses) >= request.limit:
+            break
+
+    return addresses
+
+@app.post("/surroundings", response_model=List[List[Address]])
+def get_surroundings(request: SurroundingsRequest):
+    """
+    For each address, return a window of nearby keyframes.
+    """
+    results = []
+    for addr in request.addresses:
+        folder_path = os.path.join(IMAGES_DIR, addr.folder_name)
+        if not os.path.exists(folder_path):
+            results.append([])
+            continue
+        files = sorted([
+            f for f in os.listdir(folder_path)
+            if f.lower().endswith((".jpg", ".png", ".jpeg"))
+        ])
+        if addr.image_name not in files:
+            results.append([])
+            continue
+        idx = files.index(addr.image_name)
+        start, end = max(0, idx - request.window), min(len(files), idx + request.window + 1)
+        group = [
+            Address(folder_name=addr.folder_name, image_name=files[i])
+            for i in range(start, end)
+        ]
+        results.append(group)
+    return results
+
+@app.get("/image/{folder_name}/{image_name}")
+def get_image(folder_name: str, image_name: str):
+    """
+    Serve an image file by URL.
+    """
+    path = os.path.join(IMAGES_DIR, folder_name, image_name)
+    if not os.path.exists(path):
+        raise HTTPException(404, "Image not found")
+    return FileResponse(path)
+
+# --- MAIN ---
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000)

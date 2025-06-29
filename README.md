@@ -23,10 +23,10 @@ From PowerShell or Windows Command Prompt
 
 ```bash
 # Download the configuration file and rename it as docker-compose.yml
-C:\>Invoke-WebRequest https://github.com/milvus-io/milvus/releases/download/v2.4.15/milvus-standalone-docker-compose.yml -OutFile docker-compose.yml
+>Invoke-WebRequest https://github.com/milvus-io/milvus/releases/download/v2.4.15/milvus-standalone-docker-compose.yml -OutFile docker-compose.yml
 
 # Start Milvus
-C:\>docker compose up -d
+>docker compose up -d
 Creating milvus-etcd  ... done
 Creating milvus-minio ... done
 Creating milvus-standalone ... done
