@@ -1,13 +1,63 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React</title>
+    <title>CSS Website Layout</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <script src="script.js"></script>
+
+    <div class="header">
+      <h1>Video Retrieval</h1>
+    </div>
+
+    <div class="topnav">
+      <a href="#">Stage 1</a>
+      <a href="#">Stage 2</a>
+    </div>
+
+    <div class="main">
+      <div class="column left">
+        <h2>Query</h2>
+        <div class="query-divs">
+          <button class="text-type">Text</button>
+          <button class="object-type">Object</button>
+          <button class="image-type">Sketch</button>
+          <button class="color-type">Colors</button>
+          <textarea class="query-by-text" placeholder="Enter your query..."></textarea>
+        </div>
+        <div class="add-remove-buttons">
+          <button class="remove-button">-</button>
+          <button class="add-button">+</button>
+        </div>
+        <div class="search-div">
+          <button class="csv-button">Add to CSV</button>
+          <button class="search-button">Search</button>
+        </div>
+      </div>
+      
+      <div class="column middle">
+        <h2>Result Frames</h2>
+        <div class="image-groups"></div>
+      </div>
+      
+      <div class="column right">
+        <h2>Next Frame</h2>
+        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit..</p>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        <a href="">Dat A. Dang</a> -
+        <a href="">Hieu T. Nguyen</a> -
+        <a href="">Phuc C. Truong</a> -
+        <a href="">Truc T. P. Nguyen</a> -
+        <a href="">Phat T. Tran</a>
+      </p>
+    </div>
+    
   </body>
 </html>

@@ -1,13 +1,15 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
 from pymilvus import AnnSearchRequest, RRFRanker, MilvusClient
 
+from setup_milvus import MilvusCollection
 from pydantic import BaseModel
 from typing import List, Optional
 from clip_encoder import ClipEncoder
 
 import os
+import httpx
 import pickle
 
 # --- CONFIG ---
@@ -24,21 +26,16 @@ app.add_middleware(
 )
 
 encoder = ClipEncoder()
-milvus_client = MilvusClient(uri="http://localhost:19530")
 ranker = RRFRanker(100)
 
-# --- MILVUS SETUP (ONE-TIME) ---
-if milvus_client.has_collection(COLLECTION_NAME):
-    milvus_client.drop_collection(COLLECTION_NAME)
-milvus_client.create_collection(
-    collection_name=COLLECTION_NAME,
-    dimension=512,
-    auto_id=True
+milvus_client = MilvusClient(uri="http://localhost:19530")
+milvus_collection = MilvusCollection(
+    client=milvus_client,
+    collection_name="clip_images",
+    encoder_dim=512,
 )
-for i in range(9):
-    with open(f"embeddings/aic_2023_clip_{i}.pkl", "rb") as f:
-        data = pickle.load(f)
-    milvus_client.insert(collection_name=COLLECTION_NAME, data=data)
+milvus_collection.setup(embeddings_dir="embeddings")
+print(f"[Milvus] Entities in collection: {milvus_collection.entity_count()}")
 
 # --- MODELS ---
 class Address(BaseModel):
@@ -54,7 +51,6 @@ class SurroundingsRequest(BaseModel):
     window: int = 10
 
 # --- ROUTES ---
-
 @app.get("/")
 async def root():
     return {"message": "Hello world!"}
@@ -162,7 +158,6 @@ def get_image(folder_name: str, image_name: str):
         raise HTTPException(404, "Image not found")
     return FileResponse(path)
 
-# --- MAIN ---
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
