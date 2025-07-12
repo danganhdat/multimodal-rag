@@ -40,7 +40,7 @@ body {
 /* Create three unequal columns that floats next to each other */
 .column {
   float: left;
-  padding: 10px;
+  /* padding: 10px; */
 }
 
 /* Left and right column */
@@ -82,7 +82,7 @@ body {
 .image-groups {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  /* gap: 10px; */
   /* margin-top: 10px; */
 }
 
@@ -116,7 +116,11 @@ body {
 
 .image-cell img:hover {
   transform: scale(1.05);
-  border-color: #b0b0b0;
+}
+
+.image-cell.selected img {
+  outline: 3px solid red;
+  outline-offset: 1px;
 }
 
 hr {
