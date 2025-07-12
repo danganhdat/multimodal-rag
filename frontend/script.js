@@ -132,10 +132,19 @@ document.addEventListener("DOMContentLoaded", function () {
     container.textContent = "Loading...";
     container.style.color = "#555";
     try {
-      const searchRes = await fetch(`${API_BASE}/search`, {
+      let searchUrl, searchBody;
+      if (queries.length >= 2) {
+        searchUrl = `${API_BASE}/search_hybrid`;
+        searchBody = JSON.stringify({ queries, limit: 10 });
+      } else {
+        searchUrl = `${API_BASE}/search`;
+        searchBody = JSON.stringify({ queries, limit: 10 });
+      }
+
+      const searchRes = await fetch(searchUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ queries, limit: 10 })
+        body: searchBody
       });
       if (!searchRes.ok) throw new Error(await searchRes.text());
       const searchData = await searchRes.json();
