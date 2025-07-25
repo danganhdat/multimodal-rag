@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 
-API_URL = "http://localhost:8000"
+API_URL = "http://127.0.0.1:8000"
 MAX_IMAGES_PER_ROW = 5
 
 def image_url(addr):
@@ -58,6 +58,16 @@ if search and query.strip():
                 break
             # r2.json() returns a list of groups, but here it's a single group inside a list
             group = r2.json()[0]
+            
+            # Debug: Check what we got from surroundings API
+            st.write(f"[DEBUG] Surroundings API response for keyframe {idx+1}:")
+            st.write(f"[DEBUG] Status: {r2.status_code}")
+            st.write(f"[DEBUG] Raw response: {r2.json()}")
+            st.write(f"[DEBUG] Group length: {len(group) if group else 'None/Empty'}")
+            if group:
+                st.write(f"[DEBUG] First address in group: {group[0]}")
+                st.write(f"[DEBUG] Sample image URL: {image_url(group[0])}")
+            
             results_so_far.append(group)
             # Now render all so far
             with placeholder.container():
@@ -74,6 +84,22 @@ if search and query.strip():
                     # Show the center image as a big featured image
                     center_idx = len(group) // 2
                     center_addr = group[center_idx]
+                    
+                    # Debug: Check center image details
+                    st.write(f"[DEBUG] Center image details for Result {gidx+1}:")
+                    st.write(f"[DEBUG] Center index: {center_idx}")
+                    st.write(f"[DEBUG] Center address: {center_addr}")
+                    st.write(f"[DEBUG] Center image URL: {image_url(center_addr)}")
+                    
+                    # Test if the image URL is accessible
+                    try:
+                        test_response = requests.get(image_url(center_addr))
+                        st.write(f"[DEBUG] Image API test - Status: {test_response.status_code}")
+                        if test_response.status_code != 200:
+                            st.error(f"Image API failed: {test_response.text}")
+                    except Exception as e:
+                        st.error(f"Error testing image URL: {e}")
+                    
                     st.image(
                         image_url(center_addr),
                         use_container_width=True,
