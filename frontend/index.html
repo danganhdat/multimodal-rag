@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>CSS Website Layout</title>
+    <title>Baobab - AI Challenge HCMC</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
@@ -33,7 +33,24 @@
           <button class="add-button">+</button>
         </div>
         <div class="search-div">
-          <button class="search-button" style="display: block">Search</button>
+          <label for="top-k-button">Top-K results:</label>
+          <select id="top-k-button" name="top-k-button"> 
+            <option value="10">top-10</option>
+            <option value="20">top-20</option>
+            <option value="30">top-30</option>
+            <option value="30">top-40</option>
+            <option value="30">top-50</option>
+          </select>
+          <label for="surround-button">Context window:</label>
+          <select id="surround-button" name="surround-button">
+            <option value="10">10 frames</option>
+            <option value="15">15 frames</option>
+            <option value="20">20 frames</option>
+            <option value="25">25 frames</option>
+            <option value="30">30 frames</option>
+          </select>
+
+          <button class="search-button">Search</button>
           <button class="add-csv-button">Add to CSV</button>
           <button class="download-csv-button">Download CSV</button>
         </div>
