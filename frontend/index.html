@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="style.css">
   </head>
   <body>
+    <script src="api.js"></script>
     <script src="script.js"></script>
 
     <div class="header">
@@ -77,6 +78,61 @@
       <p>
         <a href="">Dat A. Dang</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Hieu T. Nguyen</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Phuc C. Truong</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Truc T. P. Nguyen</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Phat T. Tran</a>
       </p>
+    </div>
+
+    <!-- Drawing Popup -->
+    <div class="drawing-popup" id="drawingPopup">
+      <div class="drawing-popup-content">
+        <div class="drawing-header">
+          <h3>Vẽ Sketch</h3>
+          <button class="close-drawing" id="closeDrawing">Đóng</button>
+        </div>
+        
+        <div class="drawing-toolbar">
+          <!-- Color Picker -->
+          <div class="toolbar-group">
+            <label for="colorPicker">Màu:</label>
+            <input type="color" id="colorPicker" value="#000000">
+          </div>
+
+          <!-- Brush Size -->
+          <div class="toolbar-group">
+            <label for="brushSize">Nét vẽ:</label>
+            <input type="range" id="brushSize" min="1" max="50" value="5">
+            <span id="brushSizeValue">5</span>
+          </div>
+
+          <!-- Drawing Tools -->
+          <div class="toolbar-group">
+            <button id="pencilBtn" class="tool-btn active" title="Bút chì">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                <path d="m15 5 4 4"/>
+              </svg>
+              Bút
+            </button>
+            <button id="eraserBtn" class="tool-btn" title="Tẩy">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21H7Z"/>
+                <path d="M18 7.5h-4"/>
+                <path d="m15 10.5-5-5"/>
+              </svg>
+              Tẩy
+            </button>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="toolbar-group">
+            <button id="clearBtn" class="action-btn clear-btn">Xóa hết</button>
+            <button id="saveBtn" class="action-btn save-btn">Lưu ảnh</button>
+            <button id="useSketchBtn" class="action-btn use-sketch-btn">Sử dụng Sketch</button>
+          </div>
+        </div>
+
+        <div class="drawing-canvas-container">
+          <canvas id="drawingCanvas"></canvas>
+        </div>
+      </div>
     </div>
     
   </body>

@@ -1,5 +1,3 @@
-const API_BASE = "http://localhost:8000";
-
 document.addEventListener("DOMContentLoaded", function () {
   const leftColumn = document.querySelector(".column.left");
   let queryDivs = [leftColumn.querySelector(".query-divs")];
@@ -83,7 +81,7 @@ document.addEventListener("DOMContentLoaded", function () {
         cell.dataset.frameIdx = match ? match[1] : addr.image_name;
 
         const img = document.createElement('img');
-        img.src = `${API_BASE}/image/${addr.folder_name}/${addr.image_name}`;
+        img.src = API.getImageUrl(addr.folder_name, addr.image_name);
         img.alt = `${addr.folder_name}/${addr.image_name}`;
 
         // Click to select only this image
@@ -132,32 +130,14 @@ document.addEventListener("DOMContentLoaded", function () {
     container.textContent = "Loading...";
     container.style.color = "#555";
     try {
-      let searchUrl, searchBody;
-      if (queries.length >= 2) {
-        searchUrl = `${API_BASE}/search_hybrid`;
-        searchBody = JSON.stringify({ queries, limit: 10 });
-      } else {
-        searchUrl = `${API_BASE}/search`;
-        searchBody = JSON.stringify({ queries, limit: 10 });
-      }
-
-      const searchRes = await fetch(searchUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: searchBody
-      });
-      if (!searchRes.ok) throw new Error(await searchRes.text());
-      const searchData = await searchRes.json();
-
-      const surroundingsRes = await fetch(`${API_BASE}/surroundings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ addresses: searchData, window: 10 }) // adjust window as needed
-      });
-      if (!surroundingsRes.ok) throw new Error(await surroundingsRes.text());
-      const surroundingsData = await surroundingsRes.json();
+      // Use API module for search
+      const searchData = await API.performSearch(queries, 10);
+      
+      // Get surroundings for the search results
+      const surroundingsData = await API.getSurroundings(searchData, 10);
       renderImageGroups(surroundingsData);
     } catch (e) {
+      console.error('Search error:', e);
       showError("Search error");
     }
   };
@@ -241,4 +221,214 @@ document.addEventListener("DOMContentLoaded", function () {
   // ========== Initialize ==========
   renderCSVTable(); // Show empty table on first load
 
+  // ========== Drawing Functionality ==========
+  initializeDrawing();
+
 });
+
+// Drawing functionality
+function initializeDrawing() {
+  const drawingPopup = document.getElementById('drawingPopup');
+  const closeDrawingBtn = document.getElementById('closeDrawing');
+  
+  // Handle Sketch button clicks
+  document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('image-type')) {
+      drawingPopup.classList.add('show');
+      initializeCanvas();
+    }
+  });
+
+  // Close popup
+  closeDrawingBtn.addEventListener('click', function() {
+    drawingPopup.classList.remove('show');
+  });
+
+  // Close popup when clicking outside
+  drawingPopup.addEventListener('click', function(e) {
+    if (e.target === drawingPopup) {
+      drawingPopup.classList.remove('show');
+    }
+  });
+
+  function initializeCanvas() {
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // State variables
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentTool = 'pencil';
+
+    // UI elements
+    const colorPicker = document.getElementById('colorPicker');
+    const brushSizeSlider = document.getElementById('brushSize');
+    const brushSizeValue = document.getElementById('brushSizeValue');
+    const pencilBtn = document.getElementById('pencilBtn');
+    const eraserBtn = document.getElementById('eraserBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const useSketchBtn = document.getElementById('useSketchBtn');
+
+    // Set canvas size
+    function resizeCanvas() {
+      const container = canvas.parentElement;
+      const containerRect = container.getBoundingClientRect();
+      
+      canvas.width = containerRect.width - 20;
+      canvas.height = containerRect.height - 20;
+      
+      // Set default styles
+      ctx.strokeStyle = colorPicker.value;
+      ctx.lineWidth = brushSizeSlider.value;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+
+    // Initialize canvas
+    resizeCanvas();
+
+    // Drawing functions
+    function getMousePos(evt) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+      };
+    }
+
+    function getTouchPos(evt) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: evt.touches[0].clientX - rect.left,
+        y: evt.touches[0].clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      e.preventDefault();
+      isDrawing = true;
+      const pos = e.touches ? getTouchPos(e) : getMousePos(e);
+      [lastX, lastY] = [pos.x, pos.y];
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+
+      const pos = e.touches ? getTouchPos(e) : getMousePos(e);
+      
+      // Set tool properties
+      if (currentTool === 'pencil') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = colorPicker.value;
+      } else if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+      }
+      ctx.lineWidth = brushSizeSlider.value;
+
+      // Draw line
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+
+      [lastX, lastY] = [pos.x, pos.y];
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    // Event listeners for drawing
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    // Touch events
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
+
+    // Toolbar controls
+    brushSizeSlider.addEventListener('input', function(e) {
+      const size = e.target.value;
+      brushSizeValue.textContent = size;
+      ctx.lineWidth = size;
+    });
+
+    colorPicker.addEventListener('change', function(e) {
+      ctx.strokeStyle = e.target.value;
+    });
+
+    clearBtn.addEventListener('click', function() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    saveBtn.addEventListener('click', async function() {
+      try {
+        // Create a temporary canvas with white background
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        
+        // Fill white background
+        tempCtx.fillStyle = 'white';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        
+        // Draw the original canvas on top
+        tempCtx.drawImage(canvas, 0, 0);
+        
+        // Get image data
+        const dataURL = tempCanvas.toDataURL('image/png');
+        
+        // Comment out download functionality
+        // Set download link for local download
+        // saveBtn.href = dataURL;
+        
+        // Save to server using API module
+        const result = await API.saveSketch(dataURL);
+        console.log('Sketch saved to server:', result);
+        alert(`Ảnh đã được lưu thành công!\nFile: ${result.file_info.file_name}\nSize: ${result.file_info.file_size} bytes`);
+        
+      } catch (error) {
+        console.error('Error saving sketch:', error);
+        alert('Có lỗi khi lưu ảnh lên server');
+      }
+    });
+
+    useSketchBtn.addEventListener('click', function() {
+      // Convert canvas to image data
+      const dataURL = canvas.toDataURL('image/png');
+      
+      // Here you can implement logic to use the sketch for search
+      // For now, just show an alert
+      alert('Sketch sẽ được sử dụng để tìm kiếm!\n(Chức năng này cần được implement trong backend)');
+      
+      // Close the popup
+      drawingPopup.classList.remove('show');
+      
+      // Optionally clear the canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    pencilBtn.addEventListener('click', function() {
+      currentTool = 'pencil';
+      pencilBtn.classList.add('active');
+      eraserBtn.classList.remove('active');
+    });
+
+    eraserBtn.addEventListener('click', function() {
+      currentTool = 'eraser';
+      eraserBtn.classList.add('active');
+      pencilBtn.classList.remove('active');
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', resizeCanvas);
+  }
+}
