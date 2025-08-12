@@ -11,10 +11,13 @@ from clip_encoder import ClipEncoder
 import os
 import httpx
 import pickle
+import base64
+import datetime
 
 # --- CONFIG ---
 COLLECTION_NAME = "clip_images"
 IMAGES_DIR = os.path.abspath("D:\\SGU_University\\Project_ca_nhan\\AIC_BE\\data\\keyframes")
+SKETCHES_DIR = os.path.abspath("D:\\SGU_University\\Project_ca_nhan\\AIC_BE\\sketches")
 
 # --- APP INIT ---
 app = FastAPI()
@@ -49,6 +52,12 @@ class SearchRequest(BaseModel):
 class SurroundingsRequest(BaseModel):
     addresses: List[Address]
     window: int = 10
+
+class SketchPathRequest(BaseModel):
+    image_path: str
+
+class SketchDataRequest(BaseModel):
+    image_data: str  # Base64 encoded image data
 
 # --- ROUTES ---
 @app.get("/")
@@ -178,6 +187,96 @@ def get_image(folder_name: str, image_name: str):
     if not os.path.exists(path):
         raise HTTPException(404, "Image not found")
     return FileResponse(path)
+
+
+
+
+@app.post("/process_sketch")
+def process_sketch(request: SketchPathRequest):
+    """
+    Process a sketch image from the given file path.
+    Currently just checks if the file exists and returns a status message.
+    """
+    try:
+        # Kiểm tra xem đường dẫn có tồn tại không
+        if not os.path.exists(request.image_path):
+            raise HTTPException(status_code=404, detail=f"Sketch image not found at path: {request.image_path}")
+        
+        # Kiểm tra xem có phải là file ảnh không
+        if not request.image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            raise HTTPException(status_code=400, detail="File must be an image (PNG, JPG, JPEG)")
+        
+        # Lấy thông tin file
+        file_size = os.path.getsize(request.image_path)
+        file_name = os.path.basename(request.image_path)
+        
+        print(f"[SKETCH] Successfully received sketch: {file_name}")
+        print(f"[SKETCH] File path: {request.image_path}")
+        print(f"[SKETCH] File size: {file_size} bytes")
+        
+        return {
+            "status": "success",
+            "message": "Sketch image received and processed successfully",
+            "file_info": {
+                "file_name": file_name,
+                "file_path": request.image_path,
+                "file_size": file_size
+            }
+        }
+        
+    except Exception as e:
+        print(f"[SKETCH ERROR] {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing sketch: {str(e)}")
+
+@app.post("/save_sketch")
+def save_sketch(request: SketchDataRequest):
+    """
+    Save a sketch image from base64 data and return the file path.
+    Then automatically process the sketch.
+    """
+    try:
+        # Tạo thư mục sketches nếu chưa tồn tại
+        os.makedirs(SKETCHES_DIR, exist_ok=True)
+        
+        # Remove data URL prefix if present
+        image_data = request.image_data
+        if image_data.startswith('data:image'):
+            image_data = image_data.split(',', 1)[1]
+        
+        # Decode base64 image
+        image_bytes = base64.b64decode(image_data)
+        
+        # Tạo tên file unique dựa trên timestamp
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        file_name = f"sketch_{timestamp}.png"
+        file_path = os.path.join(SKETCHES_DIR, file_name)
+        
+        # Lưu file
+        with open(file_path, 'wb') as f:
+            f.write(image_bytes)
+        
+        file_size = os.path.getsize(file_path)
+        
+        print(f"[SAVE SKETCH] Successfully saved sketch: {file_name}")
+        print(f"[SAVE SKETCH] File path: {file_path}")
+        print(f"[SAVE SKETCH] File size: {file_size} bytes")
+        
+        # Tự động gọi process_sketch
+        process_result = {
+            "status": "success",
+            "message": "Sketch saved and processed successfully",
+            "file_info": {
+                "file_name": file_name,
+                "file_path": file_path,
+                "file_size": file_size
+            }
+        }
+        
+        return process_result
+        
+    except Exception as e:
+        print(f"[SAVE SKETCH ERROR] {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error saving sketch: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn
