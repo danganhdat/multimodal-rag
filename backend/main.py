@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, Response
@@ -14,7 +15,7 @@ import pickle
 
 # --- CONFIG ---
 COLLECTION_NAME = "clip_images"
-IMAGES_DIR = os.path.abspath("D:\\SGU_University\\Project_ca_nhan\\AIC_BE\\data\\keyframes")
+IMAGES_DIR = os.path.abspath("../data/keyframes")
 
 # --- APP INIT ---
 app = FastAPI()
@@ -26,6 +27,7 @@ app.add_middleware(
 )
 
 encoder = ClipEncoder()
+
 ranker = RRFRanker(100)
 
 milvus_client = MilvusClient(uri="http://localhost:19530")
@@ -33,9 +35,13 @@ milvus_collection = MilvusCollection(
     client=milvus_client,
     collection_name="clip_images",
     encoder_dim=512,
+
+
 )
 milvus_collection.setup(embeddings_dir="embeddings")
 print(f"[Milvus] Entities in collection: {milvus_collection.entity_count()}")
+
+
 
 # --- MODELS ---
 class Address(BaseModel):
@@ -51,6 +57,7 @@ class SurroundingsRequest(BaseModel):
     window: int = 10
 
 # --- ROUTES ---
+
 @app.get("/")
 async def root():
     return {"message": "Hello world!"}
@@ -126,46 +133,26 @@ def get_surroundings(request: SurroundingsRequest):
     """
     For each address, return a window of nearby keyframes.
     """
-    print(f"Requesting surroundings for {len(request.addresses)} addresses with window size {request.window}")
     results = []
     for addr in request.addresses:
-        print(f"[DEBUG] Processing address: {addr.folder_name}/{addr.image_name}")
         folder_path = os.path.join(IMAGES_DIR, addr.folder_name)
-        print(f"[DEBUG] Full folder path: {folder_path}")
-        print(f"[DEBUG] IMAGES_DIR: {IMAGES_DIR}")
-        print(f"[DEBUG] Folder exists: {os.path.exists(folder_path)}")
-        
         if not os.path.exists(folder_path):
-            print(f"[DEBUG] Folder not found, returning empty list")
             results.append([])
             continue
-            
         files = sorted([
             f for f in os.listdir(folder_path)
             if f.lower().endswith((".jpg", ".png", ".jpeg"))
         ])
-        print(f"[DEBUG] Found {len(files)} image files in folder")
-        print(f"[DEBUG] First 5 files: {files[:5] if files else 'None'}")
-        print(f"[DEBUG] Looking for image: {addr.image_name}")
-        print(f"[DEBUG] Image found in list: {addr.image_name in files}")
-        
         if addr.image_name not in files:
-            print(f"[DEBUG] Image not found in files list, returning empty list")
             results.append([])
             continue
-            
         idx = files.index(addr.image_name)
         start, end = max(0, idx - request.window), min(len(files), idx + request.window + 1)
-        print(f"[DEBUG] Image index: {idx}, window: {start}-{end}")
-        
         group = [
             Address(folder_name=addr.folder_name, image_name=files[i])
             for i in range(start, end)
         ]
-        print(f"[DEBUG] Created group with {len(group)} images")
         results.append(group)
-    
-    print(f"[DEBUG] Final results: {len(results)} groups")
     return results
 
 @app.get("/image/{folder_name}/{image_name}")
@@ -173,11 +160,11 @@ def get_image(folder_name: str, image_name: str):
     """
     Serve an image file by URL.
     """
-    print(f"Requesting image: {folder_name}/{image_name}")
     path = os.path.join(IMAGES_DIR, folder_name, image_name)
     if not os.path.exists(path):
         raise HTTPException(404, "Image not found")
     return FileResponse(path)
+
 
 if __name__ == "__main__":
     import uvicorn
