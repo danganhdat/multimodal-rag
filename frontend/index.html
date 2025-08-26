@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Baobab - AI Challenge HCMC</title>
+    <title>SGU 101</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="style.css">
@@ -11,7 +11,7 @@
     <script src="script.js"></script>
 
     <div class="header">
-      <h1>Video Retrieval</h1>
+      <h1>Video Retrieval - AI Challenge HCMC</h1>
     </div>
 
     <div class="topnav">
@@ -21,41 +21,53 @@
 
     <div class="main">
       <div class="column left">
-        <h2>Query</h2>
-        <div class="query-divs">
-          <button class="text-type">Text</button>
-          <button class="object-type">Object</button>
-          <button class="image-type">Sketch</button>
-          <button class="color-type">Colors</button>
-          <textarea class="query-by-text" placeholder="Enter your query..."></textarea>
-        </div>
-        <div class="add-remove-buttons">
-          <button class="remove-button">-</button>
-          <button class="add-button">+</button>
-        </div>
-        <div class="search-div">
-          <label for="top-k-button">Top-K results:</label>
-          <select id="top-k-button" name="top-k-button"> 
-            <option value="10">top-10</option>
-            <option value="20">top-20</option>
-            <option value="30">top-30</option>
-            <option value="30">top-40</option>
-            <option value="30">top-50</option>
-          </select>
-          <label for="surround-button">Context window:</label>
-          <select id="surround-button" name="surround-button">
-            <option value="10">10 frames</option>
-            <option value="15">15 frames</option>
-            <option value="20">20 frames</option>
-            <option value="25">25 frames</option>
-            <option value="30">30 frames</option>
-          </select>
+        <aside class="sidebar">
 
-          <button class="search-button">Search</button>
-          <button class="add-csv-button">Add to CSV</button>
-          <button class="download-csv-button">Download CSV</button>
-        </div>
-        <div id="show-csv-table"></div>
+          <!-- Current scene -->
+          <section class="card">
+            <h2>Current scene</h2>
+            <input class="desc" placeholder='The reportage has a picture with a green background. On the picture is the word "BACK VIEW" written by hand.'></textarea>
+
+            <div class="filter-row">
+              <input class="filter-input" type="text" placeholder="Object Filter…" aria-label="Object filter (next)">
+            </div>
+
+            <div class="filter-row">
+              <input class="filter-input" type="text" placeholder="Color Filter…" aria-label="Color filter (next)">
+            </div>
+
+            <div class="filter-row">
+              <input class="filter-input" type="text" placeholder="OCR Filter…" aria-label="OCR filter (next)">
+            </div>
+          </section>
+
+          <!-- Next scene -->
+          <section class="card">
+            <h2>Next scene</h2>
+            <input class="desc" placeholder='The reportage has a picture with a green background. On the picture is the word "BACK VIEW" written by hand.'></textarea>
+            
+            <div class="filter-row">
+              <input class="filter-input" type="text" placeholder="Object Filter…" aria-label="Object filter (next)">
+            </div>
+
+            <div class="filter-row">
+              <input class="filter-input" type="text" placeholder="Color Filter…" aria-label="Color filter (next)">
+            </div>
+
+            <div class="filter-row">
+              <input class="filter-input" type="text" placeholder="OCR Filter…" aria-label="OCR filter (next)">
+            </div>
+          <section class="card">
+            <h2>[Scenes]</h2>
+            <input class="id-input" type="text" placeholder="E.g: L01_V001,0" aria-label="Example ID">
+          </section>
+          <section class="card">
+            <h2>Search</h2>
+            <div class="search">
+            <button class="search-button">Search</button>
+          </section>
+          
+        </aside>
       </div>
       
       <div class="column middle">
@@ -78,61 +90,6 @@
       <p>
         <a href="">Dat A. Dang</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Hieu T. Nguyen</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Phuc C. Truong</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Truc T. P. Nguyen</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Phat T. Tran</a>
       </p>
-    </div>
-
-    <!-- Drawing Popup -->
-    <div class="drawing-popup" id="drawingPopup">
-      <div class="drawing-popup-content">
-        <div class="drawing-header">
-          <h3>Vẽ Sketch</h3>
-          <button class="close-drawing" id="closeDrawing">Đóng</button>
-        </div>
-        
-        <div class="drawing-toolbar">
-          <!-- Color Picker -->
-          <div class="toolbar-group">
-            <label for="colorPicker">Màu:</label>
-            <input type="color" id="colorPicker" value="#000000">
-          </div>
-
-          <!-- Brush Size -->
-          <div class="toolbar-group">
-            <label for="brushSize">Nét vẽ:</label>
-            <input type="range" id="brushSize" min="1" max="50" value="5">
-            <span id="brushSizeValue">5</span>
-          </div>
-
-          <!-- Drawing Tools -->
-          <div class="toolbar-group">
-            <button id="pencilBtn" class="tool-btn active" title="Bút chì">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                <path d="m15 5 4 4"/>
-              </svg>
-              Bút
-            </button>
-            <button id="eraserBtn" class="tool-btn" title="Tẩy">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21H7Z"/>
-                <path d="M18 7.5h-4"/>
-                <path d="m15 10.5-5-5"/>
-              </svg>
-              Tẩy
-            </button>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="toolbar-group">
-            <button id="clearBtn" class="action-btn clear-btn">Xóa hết</button>
-            <button id="saveBtn" class="action-btn save-btn">Lưu ảnh</button>
-            <button id="useSketchBtn" class="action-btn use-sketch-btn">Sử dụng Sketch</button>
-          </div>
-        </div>
-
-        <div class="drawing-canvas-container">
-          <canvas id="drawingCanvas"></canvas>
-        </div>
-      </div>
     </div>
     
   </body>

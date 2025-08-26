@@ -2,8 +2,12 @@
 
 data/
 keyframes/
+aic25-batch1-keyframes/
+aic25-batch1-video/
 *.jpg
+*.pkl
 volumes/
+venv-imt/
 # embeddings/
 # *.pkl
 package-lock.json

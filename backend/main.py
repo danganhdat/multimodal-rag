@@ -1,23 +1,21 @@
-
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, Response
-from pymilvus import AnnSearchRequest, RRFRanker, MilvusClient
-
-from setup_milvus import MilvusCollection
-from pydantic import BaseModel
+from fastapi.responses import FileResponse
+from pymilvus import AnnSearchRequest, RRFRanker, MilvusClient, Function, FunctionType
 from typing import List, Optional
-from clip_encoder import ClipEncoder
+from pydantic import BaseModel
+from typing import List
+from encoder import SigLIPEncoder, TaskFormerEncoder
 
+import pyjokes
 import os
-import httpx
-import pickle
 import base64
 import datetime
 
 # --- CONFIG ---
-COLLECTION_NAME = "clip_images"
-IMAGES_DIR = os.path.abspath("../data/keyframes")
+COLLECTION_NAME = "my_collection"
+IMAGES_DIR = os.path.abspath("H:/aic25-batch1-keyframes/keyframes")
+SKETCHES_DIR = os.path.abspath("../data/sketches")
 
 # --- APP INIT ---
 app = FastAPI()
@@ -28,115 +26,115 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-encoder = ClipEncoder()
-
+sig = SigLIPEncoder()
+task = TaskFormerEncoder()
 ranker = RRFRanker(100)
+rerank = Function(
+        name="weight",
+        input_field_names=[], # Must be an empty list
+        function_type=FunctionType.RERANK,
+        params={
+            "reranker": "weighted", 
+            "weights": [0.2, 0.8],
+            "norm_score": True  # Optional
+        }
+    )
+client = MilvusClient(uri="http://localhost:19530")
 
-milvus_client = MilvusClient(uri="http://localhost:19530")
-milvus_collection = MilvusCollection(
-    client=milvus_client,
-    collection_name="clip_images",
-    encoder_dim=512,
-
-
-)
-milvus_collection.setup(embeddings_dir="embeddings")
-print(f"[Milvus] Entities in collection: {milvus_collection.entity_count()}")
-
-
+if not client.has_collection("my_collection"):
+    print(f"[Milvus] {COLLECTION_NAME} not found.")
 
 # --- MODELS ---
+
 class Address(BaseModel):
     folder_name: str
     image_name: str
 
-class SearchRequest(BaseModel):
-    queries: List[str]
-    limit: int = 10
-
 class SurroundingsRequest(BaseModel):
     addresses: List[Address]
-    window: int = 10
-
-class SketchPathRequest(BaseModel):
-    image_path: str
-
-class SketchDataRequest(BaseModel):
-    image_data: str  # Base64 encoded image data
-
+    window: int = 25
+    
 # --- ROUTES ---
 
 @app.get("/")
 async def root():
-    return {"message": "Hello world!"}
+    random_joke = pyjokes.get_joke("en", "neutral")
+    return {"random_joke": random_joke}
 
-@app.post("/search", response_model=List[Address])
-def search(request: SearchRequest):
-    """
-    Search for keyframes by a single query.
-    """
-    embedding = encoder.encode_text(request.queries[0])
-    results = milvus_client.search(
-        collection_name=COLLECTION_NAME,
-        data=[embedding],
-        limit=request.limit,
-        output_fields=["filepath"],
-        params={"metric_type": "L2", "params": {}}
-    )
-    addresses = []
-    for result in results[0]:
-    # for hit in result:
-        filepath = result["entity"]["filepath"]
-        if filepath and "/" in filepath:
-            folder, image = filepath.split("/", 1)
-            addresses.append(Address(folder_name=folder, image_name=image))
-    return addresses
+class SearchSketchRequest(BaseModel):
+    sketch_path: str              # path to sketch image
+    text: str                     # optional text query (default empty)
 
-@app.post("/search_hybrid", response_model=List[Address])
-def search_hybrid(request: SearchRequest):
-    """
-    Perform a hybrid (multi-query) search using Reciprocal Rank Fusion (RRF).
-    Returns up to `limit` unique Address objects, ranked by fusion.
-    """
-    # Prepare an AnnSearchRequest for each query string
-    reqs = [
-        AnnSearchRequest(
-            data=[encoder.encode_text(query)],
-            anns_field="vector",   # Make sure your Milvus schema matches this field
-            param={},
-            limit=request.limit
+class SearchRequest(BaseModel):
+    queries: str                  # main text query
+    sketch: Optional[SearchSketchRequest] = None
+    ocr: List[str] = []
+    objects: List[str] = []
+    colours: List[str] = []
+    limit: int = 50
+
+
+@app.post("/search")
+def search(request: SearchRequest) -> List[dict]:
+
+    filter_parts = []
+    if request.ocr:
+        for ocr in request.ocr:
+            filter_parts.append(f'ocr like \"%{ocr}%\"')
+    if request.objects:
+        filter_parts.append(f'ARRAY_CONTAINS_ANY(objects, {request.objects})')
+    if request.colours:
+        filter_parts.append(f'ARRAY_CONTAINS_ANY(colours, {request.colours})')
+    filters = " AND ".join(filter_parts) if filter_parts else None
+
+    results = None
+
+    # text_embedding = sig.encode_text(request.queries)
+    # text_search = client.search(
+    #     collection_name=COLLECTION_NAME,
+    #     data=[text_embedding],
+    #     anns_field="text_dense",
+    #     limit=request.limit,
+    #     filter=filters,
+    #     output_fields=["path", "ocr", "objects", "colours"],
+    # )
+    
+    if request.sketch and request.sketch.text:
+        fuse_embedding = task.get_feature(request.sketch.sketch_path, request.sketch.text)
+
+        results = client.search(
+            collection_name=COLLECTION_NAME,
+            data=[fuse_embedding],
+            anns_field="sketch_dense",
+            limit=request.limit,
+            filter=filters,
+            output_fields=["path", "ocr", "objects", "colours"],
         )
-        for query in request.queries
-    ]
-    # Run hybrid search with rank fusion
-    res = milvus_client.hybrid_search(
-        collection_name=COLLECTION_NAME,
-        reqs=reqs,
-        ranker=ranker,
-        limit=request.limit,
-        output_fields=["filepath"]
-    )
 
-    addresses = []
-    seen = set()
-    # Defensive: Check for results, iterate over hits
-    hits = res[0] if res and len(res) > 0 else []
-    for hit in hits:
-        # Safely extract filepath from entity (object or dict)
-        if hasattr(hit, "entity") and hasattr(hit.entity, "filepath"):
-            filepath = hit.entity.filepath
-        else:
-            filepath = hit.get("entity", {}).get("filepath")
-        if filepath and "/" in filepath and filepath not in seen:
-            folder, image = filepath.split("/", 1)
-            addresses.append(Address(folder_name=folder, image_name=image))
-            seen.add(filepath)
-        if len(addresses) >= request.limit:
-            break
+        # results = client.hybrid_search(
+        #     collection_name=COLLECTION_NAME,
+        #     reqs=[text_search, sketch_search],
+        #     ranker=ranker,
+        #     limit=request.limit,
+        #     output_fields=["path", "ocr", "objects", "colours"],
+        # )
+        # results = [text_search, sketch_search]
 
-    return addresses
+    else:
+        raise ValueError("Invalid search request")
 
-@app.post("/surroundings", response_model=List[List[Address]])
+    hits: List[dict] = []
+    for hit in results[0]:
+        hits.append({
+            "path": hit.get("path"),
+            "ocr": hit.get("ocr", ""),
+            "objects": list(hit.get("objects", [])),
+            "colours": list(hit.get("colours", []))
+        })
+    return hits
+
+
+@app.post("/surroundings", response_model=List[Address])
 def get_surroundings(request: SurroundingsRequest):
     """
     For each address, return a window of nearby keyframes.
@@ -172,97 +170,3 @@ def get_image(folder_name: str, image_name: str):
     if not os.path.exists(path):
         raise HTTPException(404, "Image not found")
     return FileResponse(path)
-
-
-
-
-@app.post("/process_sketch")
-def process_sketch(request: SketchPathRequest):
-    """
-    Process a sketch image from the given file path.
-    Currently just checks if the file exists and returns a status message.
-    """
-    try:
-        # Kiểm tra xem đường dẫn có tồn tại không
-        if not os.path.exists(request.image_path):
-            raise HTTPException(status_code=404, detail=f"Sketch image not found at path: {request.image_path}")
-        
-        # Kiểm tra xem có phải là file ảnh không
-        if not request.image_path.lower().endswith(('.png', '.jpg', '.jpeg')):
-            raise HTTPException(status_code=400, detail="File must be an image (PNG, JPG, JPEG)")
-        
-        # Lấy thông tin file
-        file_size = os.path.getsize(request.image_path)
-        file_name = os.path.basename(request.image_path)
-        
-        print(f"[SKETCH] Successfully received sketch: {file_name}")
-        print(f"[SKETCH] File path: {request.image_path}")
-        print(f"[SKETCH] File size: {file_size} bytes")
-        
-        return {
-            "status": "success",
-            "message": "Sketch image received and processed successfully",
-            "file_info": {
-                "file_name": file_name,
-                "file_path": request.image_path,
-                "file_size": file_size
-            }
-        }
-        
-    except Exception as e:
-        print(f"[SKETCH ERROR] {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error processing sketch: {str(e)}")
-
-@app.post("/save_sketch")
-def save_sketch(request: SketchDataRequest):
-    """
-    Save a sketch image from base64 data and return the file path.
-    Then automatically process the sketch.
-    """
-    try:
-        # Tạo thư mục sketches nếu chưa tồn tại
-        os.makedirs(SKETCHES_DIR, exist_ok=True)
-        
-        # Remove data URL prefix if present
-        image_data = request.image_data
-        if image_data.startswith('data:image'):
-            image_data = image_data.split(',', 1)[1]
-        
-        # Decode base64 image
-        image_bytes = base64.b64decode(image_data)
-        
-        # Tạo tên file unique dựa trên timestamp
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        file_name = f"sketch_{timestamp}.png"
-        file_path = os.path.join(SKETCHES_DIR, file_name)
-        
-        # Lưu file
-        with open(file_path, 'wb') as f:
-            f.write(image_bytes)
-        
-        file_size = os.path.getsize(file_path)
-        
-        print(f"[SAVE SKETCH] Successfully saved sketch: {file_name}")
-        print(f"[SAVE SKETCH] File path: {file_path}")
-        print(f"[SAVE SKETCH] File size: {file_size} bytes")
-        
-        # Tự động gọi process_sketch
-        process_result = {
-            "status": "success",
-            "message": "Sketch saved and processed successfully",
-            "file_info": {
-                "file_name": file_name,
-                "file_path": file_path,
-                "file_size": file_size
-            }
-        }
-        
-        return process_result
-        
-    except Exception as e:
-        print(f"[SAVE SKETCH ERROR] {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error saving sketch: {str(e)}")
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
