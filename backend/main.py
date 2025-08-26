@@ -89,36 +89,36 @@ def search(request: SearchRequest) -> List[dict]:
 
     results = None
 
-    # text_embedding = sig.encode_text(request.queries)
-    # text_search = client.search(
-    #     collection_name=COLLECTION_NAME,
-    #     data=[text_embedding],
-    #     anns_field="text_dense",
-    #     limit=request.limit,
-    #     filter=filters,
-    #     output_fields=["path", "ocr", "objects", "colours"],
-    # )
+    text_embedding = sig.encode_text(request.queries)
+    text_search = AnnSearchRequest(
+        collection_name=COLLECTION_NAME,
+        data=[text_embedding],
+        anns_field="text_dense",
+        limit=request.limit,
+        filter=filters,
+        output_fields=["path", "ocr", "objects", "colours"],
+    )
     
     if request.sketch and request.sketch.text:
         fuse_embedding = task.get_feature(request.sketch.sketch_path, request.sketch.text)
 
-        results = client.search(
+        sketch_search = AnnSearchRequest(
             collection_name=COLLECTION_NAME,
             data=[fuse_embedding],
             anns_field="sketch_dense",
             limit=request.limit,
-            filter=filters,
+            # filter=filters,
             output_fields=["path", "ocr", "objects", "colours"],
         )
 
-        # results = client.hybrid_search(
-        #     collection_name=COLLECTION_NAME,
-        #     reqs=[text_search, sketch_search],
-        #     ranker=ranker,
-        #     limit=request.limit,
-        #     output_fields=["path", "ocr", "objects", "colours"],
-        # )
-        # results = [text_search, sketch_search]
+        results = client.hybrid_search(
+            collection_name=COLLECTION_NAME,
+            reqs=[text_search, sketch_search],
+            ranker=ranker,
+            limit=request.limit,
+            output_fields=["path", "ocr", "objects", "colours"],
+        )
+        results = [text_search, sketch_search]
 
     else:
         raise ValueError("Invalid search request")
