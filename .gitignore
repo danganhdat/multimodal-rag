@@ -1,18 +1,33 @@
-# else
+# Credentials
+gcp-key.json
+*.json.bak
 
+# Competition queries (local only)
+query-p1-groupA/
+
+# Data
+Keyframes_L21-L30/
+*.zip
 data/
 keyframes/
-aic25-batch1-keyframes/
-aic25-batch1-video/
+clip-features-32/
+map-keyframes/
+objects/
+media-info/
+videos/
+*.npy
 *.jpg
 *.pkl
 *.pt
+object_classes.json
 volumes/
 venv-imt/
-# embeddings/
-# *.pkl
+frontend-old/
+
+# Node
 package-lock.json
 node_modules/
+frontend/dist/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

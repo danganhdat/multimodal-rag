@@ -1,102 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
-    <title>SGU 101</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AIC25 Multimodal Search</title>
   </head>
   <body>
-    <script src="api.js"></script>
-    <script src="script.js"></script>
-
-    <div class="header">
-      <h1>Video Retrieval - AI Challenge HCMC</h1>
-    </div>
-
-    <div class="topnav">
-      <a href="#">Stage 1</a>
-      <a href="#">Stage 2</a>
-    </div>
-
-    <div class="main">
-      <div class="column left">
-        <aside class="sidebar">
-
-          <!-- Current scene -->
-          <section class="card">
-            <h2>Current scene</h2>
-            <input class="desc" placeholder='The reportage has a picture with a green background. On the picture is the word "BACK VIEW" written by hand.'></textarea>
-
-            <div class="filter-row">
-              <input class="filter-input" type="text" placeholder="Object Filter…" aria-label="Object filter (next)">
-            </div>
-
-            <div class="filter-row">
-              <input class="filter-input" type="text" placeholder="Color Filter…" aria-label="Color filter (next)">
-            </div>
-
-            <div class="filter-row">
-              <input class="filter-input" type="text" placeholder="OCR Filter…" aria-label="OCR filter (next)">
-            </div>
-          </section>
-
-          <!-- Next scene -->
-          <section class="card">
-            <h2>Next scene</h2>
-            <input class="desc" placeholder='The reportage has a picture with a green background. On the picture is the word "BACK VIEW" written by hand.'></textarea>
-            
-            <div class="filter-row">
-              <input class="filter-input" type="text" placeholder="Object Filter…" aria-label="Object filter (next)">
-            </div>
-
-            <div class="filter-row">
-              <input class="filter-input" type="text" placeholder="Color Filter…" aria-label="Color filter (next)">
-            </div>
-
-            <div class="filter-row">
-              <input class="filter-input" type="text" placeholder="OCR Filter…" aria-label="OCR filter (next)">
-            </div>
-          <section class="card">
-            <h2>[Scenes]</h2>
-            <input class="id-input" type="text" placeholder="E.g: L01_V001,0" aria-label="Example ID">
-          </section>
-          <section class="card">
-            <h2>Sketch</h2>
-            <div class="search">
-            <button class="search-button">Upload Sketch</button></div>
-            <input class="id-input" type="text" placeholder="Sketch color description" aria-label="Example ID">
-          </section>
-          <section class="card">
-            <h2>Search</h2>
-            <div class="search">
-            <button class="search-button">Search</button></div>
-          </section>
-          
-        </aside>
-      </div>
-      
-      <div class="column middle">
-        <h2>Result Frames</h2>
-        <div class="image-groups"></div>
-      </div>
-      
-      <div class="column right">
-        <h2>Next Frame</h2>
-        <p>
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
-          Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. 
-          Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. 
-          Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
-        </p>
-      </div>
-    </div>
-
-    <div class="footer">
-      <p>
-        <a href="">Dat A. Dang</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Hieu T. Nguyen</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Phuc C. Truong</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Truc T. P. Nguyen</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="">Phat T. Tran</a>
-      </p>
-    </div>
-    
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
