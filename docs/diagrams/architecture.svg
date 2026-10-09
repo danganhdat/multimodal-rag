@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 420" font-family="Segoe UI, Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+    <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#4A90D9"/><stop offset="100%" stop-color="#357ABD"/></linearGradient>
+    <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5CB85C"/><stop offset="100%" stop-color="#449D44"/></linearGradient>
+    <linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#F0AD4E"/><stop offset="100%" stop-color="#EC971F"/></linearGradient>
+    <linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#D9534F"/><stop offset="100%" stop-color="#C9302C"/></linearGradient>
+    <linearGradient id="g5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#9B59B6"/><stop offset="100%" stop-color="#8E44AD"/></linearGradient>
+  </defs>
+
+  <!-- Title -->
+  <text x="450" y="30" text-anchor="middle" font-size="18" font-weight="bold" fill="#333">Kiến trúc tổng quan hệ thống truy xuất video đa phương thức</text>
+
+  <!-- Input -->
+  <rect x="30" y="60" width="140" height="90" rx="10" fill="url(#g1)" stroke="#357ABD" stroke-width="1.5"/>
+  <text x="100" y="90" text-anchor="middle" fill="#fff" font-weight="bold">Truy vấn</text>
+  <text x="100" y="110" text-anchor="middle" fill="#E8F0FE" font-size="11">Văn bản (VI/EN)</text>
+  <text x="100" y="126" text-anchor="middle" fill="#E8F0FE" font-size="11">Hình ảnh</text>
+
+  <!-- Translate -->
+  <rect x="210" y="70" width="120" height="70" rx="8" fill="url(#g3)" stroke="#EC971F" stroke-width="1.5"/>
+  <text x="270" y="98" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">Dịch tự động</text>
+  <text x="270" y="116" text-anchor="middle" fill="#FFF8E1" font-size="11">VI → EN</text>
+  <line x1="170" y1="105" x2="208" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- CLIP Encoder -->
+  <rect x="370" y="60" width="140" height="90" rx="8" fill="url(#g2)" stroke="#449D44" stroke-width="1.5"/>
+  <text x="440" y="90" text-anchor="middle" fill="#fff" font-weight="bold">CLIP Encoder</text>
+  <text x="440" y="108" text-anchor="middle" fill="#E8F8E8" font-size="11">ViT-B/32</text>
+  <text x="440" y="124" text-anchor="middle" fill="#E8F8E8" font-size="11">512-dim vector</text>
+  <line x1="330" y1="105" x2="368" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Milvus -->
+  <rect x="555" y="55" width="150" height="100" rx="8" fill="url(#g5)" stroke="#8E44AD" stroke-width="1.5"/>
+  <text x="630" y="85" text-anchor="middle" fill="#fff" font-weight="bold">Milvus</text>
+  <text x="630" y="103" text-anchor="middle" fill="#F0E6F6" font-size="11">Vector Search</text>
+  <text x="630" y="119" text-anchor="middle" fill="#F0E6F6" font-size="11">+ RRF Fusion</text>
+  <text x="630" y="135" text-anchor="middle" fill="#F0E6F6" font-size="11">+ Filters (OCR, Obj)</text>
+  <line x1="510" y1="105" x2="553" y2="105" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Reranker -->
+  <rect x="555" y="195" width="150" height="80" rx="8" fill="url(#g4)" stroke="#C9302C" stroke-width="1.5"/>
+  <text x="630" y="225" text-anchor="middle" fill="#fff" font-weight="bold">Cross-Encoder</text>
+  <text x="630" y="243" text-anchor="middle" fill="#FCE4E4" font-size="11">BGE-reranker-v2-m3</text>
+  <text x="630" y="259" text-anchor="middle" fill="#FCE4E4" font-size="11">Rerank top-K</text>
+  <line x1="630" y1="155" x2="630" y2="193" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="645" y="178" fill="#888" font-size="10">Top-K candidates</text>
+
+  <!-- Results -->
+  <rect x="755" y="195" width="120" height="80" rx="8" fill="url(#g1)" stroke="#357ABD" stroke-width="1.5"/>
+  <text x="815" y="225" text-anchor="middle" fill="#fff" font-weight="bold">Kết quả</text>
+  <text x="815" y="243" text-anchor="middle" fill="#E8F0FE" font-size="11">Ranked keyframes</text>
+  <text x="815" y="259" text-anchor="middle" fill="#E8F0FE" font-size="11">+ Neighbors</text>
+  <line x1="705" y1="235" x2="753" y2="235" stroke="#555" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Data sources at bottom -->
+  <text x="450" y="340" text-anchor="middle" font-size="15" font-weight="bold" fill="#555">Dữ liệu đã tiền xử lý (Offline)</text>
+
+  <rect x="60" y="360" width="160" height="45" rx="6" fill="#E8F0FE" stroke="#4A90D9" stroke-width="1"/>
+  <text x="140" y="380" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">CLIP Features</text>
+  <text x="140" y="395" text-anchor="middle" fill="#666" font-size="10">clip-features-32/*.npy</text>
+
+  <rect x="250" y="360" width="160" height="45" rx="6" fill="#E8F8E8" stroke="#5CB85C" stroke-width="1"/>
+  <text x="330" y="380" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">OCR (Florence-2)</text>
+  <text x="330" y="395" text-anchor="middle" fill="#666" font-size="10">177,321 keyframes</text>
+
+  <rect x="440" y="360" width="160" height="45" rx="6" fill="#FFF8E1" stroke="#F0AD4E" stroke-width="1"/>
+  <text x="520" y="380" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">Object Detection</text>
+  <text x="520" y="395" text-anchor="middle" fill="#666" font-size="10">Faster R-CNN / OpenImagesV4</text>
+
+  <rect x="630" y="360" width="160" height="45" rx="6" fill="#F0E6F6" stroke="#9B59B6" stroke-width="1"/>
+  <text x="710" y="380" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">Keyframe Metadata</text>
+  <text x="710" y="395" text-anchor="middle" fill="#666" font-size="10">CSV: pts_time, fps, frame_idx</text>
+
+  <!-- Dashed lines from data to Milvus -->
+  <line x1="140" y1="360" x2="590" y2="155" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="330" y1="360" x2="610" y2="155" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="520" y1="360" x2="630" y2="155" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="710" y1="360" x2="660" y2="155" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+</svg>

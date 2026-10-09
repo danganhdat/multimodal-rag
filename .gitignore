@@ -1,9 +1,13 @@
 # Credentials
 gcp-key.json
 *.json.bak
+test.ipynb
 
 # Competition queries (local only)
 query-p1-groupA/
+
+# Model weights
+tsbir_model_weight/
 
 # Data
 Keyframes_L21-L30/

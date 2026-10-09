@@ -3,7 +3,7 @@ interface Props {
   keyframeIdx: number;
   isMain?: boolean;
   score?: number;
-  onClick?: () => void;
+  onEnlarge?: () => void;
 }
 
 export default function KeyframeCard({
@@ -11,13 +11,13 @@ export default function KeyframeCard({
   keyframeIdx,
   isMain = false,
   score,
-  onClick,
+  onEnlarge,
 }: Props) {
   return (
     <div
       className={`keyframe-card ${isMain ? "is-main" : "is-neighbor"}`}
-      onClick={onClick}
-      style={{ cursor: onClick ? "pointer" : "default" }}
+      style={{ position: "relative", cursor: onEnlarge ? "pointer" : "default" }}
+      onClick={onEnlarge}
     >
       <figure className="image is-16by9">
         <img

@@ -6,9 +6,9 @@ httpx==0.28.1
 torch==2.8.0
 torchvision==0.23.0
 sentence-transformers>=3.0.0
-FlagEmbedding>=1.2
 numpy>=1.26
 pandas>=2.0
 python-multipart>=0.0.9
 aiofiles>=24.1
 pydantic-settings>=2.0
+google-cloud-translate>=3.0

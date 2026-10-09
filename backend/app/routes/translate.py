@@ -16,7 +16,8 @@ async def translate(body: TranslateRequest):
 
     try:
         translated = await asyncio.to_thread(translate_vi_to_en, text)
-    except Exception:
+    except Exception as e:
+        print(f"Translation failed: {e}")
         translated = body.text
 
     return TranslateResponse(original=body.text, translated=translated)

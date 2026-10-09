@@ -6,6 +6,7 @@ interface Props {
   loading: boolean;
   error: string | null;
   onClickKeyframe: (videoName: string, ptsTime: number) => void;
+  onEnlargeImage: (imageUrl: string) => void;
 }
 
 export default function ResultsGrid({
@@ -13,6 +14,7 @@ export default function ResultsGrid({
   loading,
   error,
   onClickKeyframe,
+  onEnlargeImage,
 }: Props) {
   if (loading) {
     return (
@@ -65,6 +67,7 @@ export default function ResultsGrid({
           result={result}
           rank={i + 1}
           onClickKeyframe={onClickKeyframe}
+          onEnlargeImage={onEnlargeImage}
         />
       ))}
     </div>

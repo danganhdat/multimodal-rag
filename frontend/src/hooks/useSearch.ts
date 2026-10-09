@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import * as api from "../api/client";
-import type { SearchConfig, SearchResponse, QueryItem } from "../types";
+import type { SearchConfig, SearchFilters, SearchResponse, QueryItem } from "../types";
 import { DEFAULT_CONFIG } from "../types";
 
 interface UseSearchReturn {
@@ -10,7 +10,7 @@ interface UseSearchReturn {
   doSearch: (
     queries: QueryItem[],
     config?: SearchConfig,
-    filters?: { objects: string[] },
+    filters?: SearchFilters,
     imageQuery?: string
   ) => Promise<void>;
 }
@@ -24,16 +24,17 @@ export function useSearch(): UseSearchReturn {
     async (
       queries: QueryItem[],
       config: SearchConfig = DEFAULT_CONFIG,
-      filters?: { objects: string[] },
+      filters?: SearchFilters,
       imageQuery?: string
     ) => {
       setLoading(true);
       setError(null);
       try {
+        const hasFilters = filters && (filters.objects.length > 0 || filters.ocr.length > 0);
         const resp = await api.search({
           queries,
           config,
-          filters: filters?.objects.length ? filters : undefined,
+          filters: hasFilters ? filters : undefined,
           image_query: imageQuery,
         });
         setResults(resp);

@@ -1,0 +1,26 @@
+graph TD
+    Videos["Videos<br/>(L21–L30)"] --> KFExtract["Keyframe Extraction<br/>(scene changes)"]
+    KFExtract --> JPGs["Keyframes<br/>keyframes/{video}/{NNN}.jpg"]
+    KFExtract --> CSVs["Map-Keyframes CSVs<br/>frame_idx · pts_time · fps"]
+
+    JPGs --> TSBIR["TSBIR ViT-B-16<br/>(open_clip)<br/>→ sketch_dense 512-dim"]
+    JPGs --> SigLIP2["SigLIP2<br/>(google/siglip2-base-patch16-512)<br/>→ text_dense 768-dim"]
+    JPGs --> Florence["Florence-2<br/>(microsoft/Florence-2-base)<br/>→ OCR text"]
+    JPGs --> FRCNN["Faster R-CNN<br/>(inception_resnet_v2 / OpenImagesV4)<br/>→ object labels (max 20)"]
+
+    TSBIR --> Pickle["Combined Features<br/>aic25_batch1_features.pkl"]
+    SigLIP2 --> Pickle
+    Florence --> Pickle
+    FRCNN --> Pickle
+
+    Pickle --> Filter["Blank Frame Filter<br/>(skip white/black frames)"]
+    CSVs --> Filter
+    Filter --> Ingest["Ingest Script<br/>(batch 1000)"]
+
+    Ingest --> Milvus[("Milvus Collection<br/>aic25_keyframes<br/>─────────────────<br/>clip_vector (512) HNSW<br/>text_vector (768) HNSW<br/>objects · ocr<br/>video_name · frame_idx<br/>pts_time · fps")]
+
+    style TSBIR fill:#ff9f43,color:#fff
+    style SigLIP2 fill:#4a9eff,color:#fff
+    style Florence fill:#a55eea,color:#fff
+    style FRCNN fill:#26de81,color:#fff
+    style Milvus fill:#7c5cfc,color:#fff

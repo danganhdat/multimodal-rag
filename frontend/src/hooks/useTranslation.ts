@@ -11,7 +11,7 @@ export function useTranslation() {
       source: string,
       target: string,
       onResult: (translated: string) => void,
-      delay = 300
+      delay = 1000
     ) => {
       if (timerRef.current) clearTimeout(timerRef.current);
       if (!text.trim()) {

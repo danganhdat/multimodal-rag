@@ -46,3 +46,7 @@ export function getVideoMeta(videoName: string): Promise<VideoMeta> {
 export function getObjectClasses(): Promise<{ classes: string[] }> {
   return get("/object-classes");
 }
+
+export function switchEncoder(mode: string): Promise<{ mode: string; status: string }> {
+  return post("/switch-encoder?mode=" + encodeURIComponent(mode), {});
+}

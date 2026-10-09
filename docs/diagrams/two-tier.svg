@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 340" font-family="Segoe UI, Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <text x="425" y="28" text-anchor="middle" font-size="17" font-weight="bold" fill="#333">Kiến trúc truy xuất hai tầng</text>
+
+  <!-- Tier 1 box -->
+  <rect x="20" y="50" width="490" height="270" rx="12" fill="none" stroke="#4A90D9" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="35" y="72" font-size="14" font-weight="bold" fill="#4A90D9">Tầng 1: Truy xuất vector (CLIP + Milvus)</text>
+
+  <!-- Query boxes -->
+  <rect x="40" y="90" width="100" height="50" rx="6" fill="#E3F2FD" stroke="#4A90D9"/>
+  <text x="90" y="112" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">Query 1</text>
+  <text x="90" y="127" text-anchor="middle" fill="#666" font-size="10">CLIP vec</text>
+
+  <rect x="40" y="155" width="100" height="50" rx="6" fill="#E3F2FD" stroke="#4A90D9"/>
+  <text x="90" y="177" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">Query 2</text>
+  <text x="90" y="192" text-anchor="middle" fill="#666" font-size="10">CLIP vec</text>
+
+  <rect x="40" y="220" width="100" height="50" rx="6" fill="#E3F2FD" stroke="#4A90D9"/>
+  <text x="90" y="242" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">Query N</text>
+  <text x="90" y="257" text-anchor="middle" fill="#666" font-size="10">CLIP vec</text>
+
+  <text x="90" y="215" text-anchor="middle" fill="#999" font-size="18">⋮</text>
+
+  <!-- ANN Search -->
+  <rect x="180" y="90" width="110" height="50" rx="6" fill="#C8E6C9" stroke="#4CAF50"/>
+  <text x="235" y="112" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">ANN Search</text>
+  <text x="235" y="127" text-anchor="middle" fill="#666" font-size="10">sub_k results</text>
+
+  <rect x="180" y="155" width="110" height="50" rx="6" fill="#C8E6C9" stroke="#4CAF50"/>
+  <text x="235" y="177" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">ANN Search</text>
+  <text x="235" y="192" text-anchor="middle" fill="#666" font-size="10">sub_k results</text>
+
+  <rect x="180" y="220" width="110" height="50" rx="6" fill="#C8E6C9" stroke="#4CAF50"/>
+  <text x="235" y="242" text-anchor="middle" fill="#333" font-size="11" font-weight="bold">ANN Search</text>
+  <text x="235" y="257" text-anchor="middle" fill="#666" font-size="10">sub_k results</text>
+
+  <line x1="140" y1="115" x2="178" y2="115" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="140" y1="180" x2="178" y2="180" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="140" y1="245" x2="178" y2="245" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- Filters -->
+  <rect x="180" y="280" width="110" height="30" rx="6" fill="#FFF3E0" stroke="#FF9800"/>
+  <text x="235" y="300" text-anchor="middle" fill="#333" font-size="11">Filters: OCR, Obj</text>
+  <line x1="235" y1="270" x2="235" y2="278" stroke="#FF9800" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- RRF Fusion -->
+  <rect x="340" y="140" width="140" height="80" rx="8" fill="#4A90D9" stroke="#357ABD" stroke-width="1.5"/>
+  <text x="410" y="168" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">RRF Fusion</text>
+  <text x="410" y="186" text-anchor="middle" fill="#E8F0FE" font-size="11">score = Σ 1/(k+rank)</text>
+  <text x="410" y="202" text-anchor="middle" fill="#E8F0FE" font-size="11">→ top_k candidates</text>
+
+  <line x1="290" y1="115" x2="338" y2="160" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="290" y1="180" x2="338" y2="180" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="290" y1="245" x2="338" y2="200" stroke="#555" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- Tier 2 box -->
+  <rect x="530" y="50" width="300" height="270" rx="12" fill="none" stroke="#D9534F" stroke-width="2" stroke-dasharray="8,4"/>
+  <text x="545" y="72" font-size="14" font-weight="bold" fill="#D9534F">Tầng 2: Xếp hạng lại (Cross-Encoder)</text>
+
+  <!-- Cross-encoder -->
+  <rect x="560" y="100" width="240" height="100" rx="8" fill="#D9534F" stroke="#C9302C" stroke-width="1.5"/>
+  <text x="680" y="125" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">BGE-reranker-v2-m3</text>
+  <text x="680" y="148" text-anchor="middle" fill="#FCE4E4" font-size="11">Input: [query, objects + OCR text]</text>
+  <text x="680" y="168" text-anchor="middle" fill="#FCE4E4" font-size="11">Output: relevance score</text>
+  <text x="680" y="188" text-anchor="middle" fill="#FCE4E4" font-size="11">→ re-sort by score</text>
+
+  <line x1="480" y1="180" x2="558" y2="150" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="515" y="155" fill="#888" font-size="10" text-anchor="middle">candidates</text>
+
+  <!-- Final output -->
+  <rect x="600" y="230" width="160" height="60" rx="8" fill="#2C3E50" stroke="#1A252F" stroke-width="1.5"/>
+  <text x="680" y="255" text-anchor="middle" fill="#fff" font-weight="bold">Kết quả cuối</text>
+  <text x="680" y="273" text-anchor="middle" fill="#BDC3C7" font-size="11">Top-K ranked frames</text>
+  <line x1="680" y1="200" x2="680" y2="228" stroke="#555" stroke-width="1.5" marker-end="url(#arr)"/>
+</svg>

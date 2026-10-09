@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(where pandoc *)",
+      "Bash(C:/Users/datda/anaconda3/Scripts/pandoc.exe docs/report.md -o docs/report.docx --from markdown --to docx)",
+      "Bash(C:/Users/datda/anaconda3/Scripts/pandoc.exe docs/slide-guide.md -o docs/slide-guide.docx --from markdown --to docx)",
+      "Bash(python -c \"import json; d=json.load\\(open\\('eval/gt_candidates.json','r',encoding='utf-8'\\)\\); [print\\(f'{e[\\\\\"query_id\\\\\"]}: {len\\(e[\\\\\"candidates\\\\\"]\\)} candidates'\\) for e in d]\")",
+      "Bash(where mmdc *)",
+      "Bash(where npx *)",
+      "Bash(npx -y @mermaid-js/mermaid-cli mmdc -i docs/diagrams/architecture.mmd -o docs/diagrams/architecture.png -b transparent)",
+      "Bash(npx -y @mermaid-js/mermaid-cli mmdc -i docs/diagrams/two-tier.mmd -o docs/diagrams/two-tier.png -b transparent)",
+      "Bash(npx -y @mermaid-js/mermaid-cli mmdc -i docs/diagrams/data-pipeline.mmd -o docs/diagrams/data-pipeline.png -b transparent)",
+      "Bash(npx -y @mermaid-js/mermaid-cli mmdc -i docs/diagrams/search-sequence.mmd -o docs/diagrams/search-sequence.png -b transparent)",
+      "Bash(npx --package=@mermaid-js/mermaid-cli -- mmdc --version)",
+      "Bash(npx --package=@mermaid-js/mermaid-cli -- mmdc -i docs/diagrams/architecture.mmd -o docs/diagrams/architecture.png -b transparent)"
+    ]
+  }
+}

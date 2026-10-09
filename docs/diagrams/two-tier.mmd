@@ -1,0 +1,30 @@
+graph LR
+    subgraph Input["Input"]
+        Query["Query (Vietnamese)<br/>Paragraph with N sentences"]
+    end
+
+    subgraph Tier1["Tier 1: Dense Retrieval"]
+        Split["Split into<br/>N sentences"]
+        Translate["Translate<br/>VI → EN<br/>(each sentence)"]
+        Encode["SigLIP2 Encode<br/>N × 768-dim vectors"]
+        ANN["Milvus ANN Search<br/>N parallel searches<br/>HNSW · COSINE"]
+        RRF["RRF Fusion<br/>k=60<br/>Merge N result lists"]
+    end
+
+    subgraph Tier2["Tier 2: Cross-Encoder Reranking"]
+        BGE["BGE Reranker v2-m3<br/>score(query, objects + OCR)<br/>for each of Top N candidates"]
+        TopK["Top K Results<br/>(sorted by rerank_score)"]
+    end
+
+    Query --> Split
+    Split --> Translate
+    Translate --> Encode
+    Encode --> ANN
+    ANN --> RRF
+    RRF -->|"Top N = 200<br/>candidates"| BGE
+    BGE --> TopK
+
+    style Split fill:#f1c40f,color:#333
+    style Encode fill:#4a9eff,color:#fff
+    style RRF fill:#e74c3c,color:#fff
+    style BGE fill:#2ed573,color:#fff

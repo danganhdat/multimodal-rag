@@ -4,7 +4,8 @@ export interface QueryItem {
 }
 
 export type RankerType = "rrf" | "weighted";
-export type MetricType = "COSINE" | "IP" | "L2";
+export type MetricType = "COSINE";
+export type EncoderMode = "clip" | "siglip2";
 
 export interface SearchConfig {
   ranker: RankerType;
@@ -18,17 +19,19 @@ export interface SearchConfig {
   use_client_merge: boolean;
   rerank: boolean;
   rerank_candidates: number;
+  encoder_mode: EncoderMode;
 }
 
-export interface ObjectFilter {
+export interface SearchFilters {
   objects: string[];
+  ocr: string[];
 }
 
 export interface SearchRequest {
   queries: QueryItem[];
   image_query?: string;
   config: SearchConfig;
-  filters?: ObjectFilter;
+  filters?: SearchFilters;
 }
 
 export interface NeighborFrame {
@@ -48,6 +51,7 @@ export interface SearchResult {
   score: number;
   rerank_score: number | null;
   objects: string[];
+  ocr: string;
   neighbors: NeighborFrame[];
   image_url: string;
 }
@@ -83,6 +87,7 @@ export const DEFAULT_CONFIG: SearchConfig = {
   neighbor_window: 5,
   group_by_video: false,
   use_client_merge: false,
-  rerank: false,
-  rerank_candidates: 200,
+  rerank: true,
+  rerank_candidates: 20,
+  encoder_mode: "siglip2",
 };

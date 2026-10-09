@@ -1,9 +1,10 @@
 import { useState } from "react";
-import type { QueryItem, SearchConfig } from "../types";
+import type { QueryItem, SearchConfig, SearchFilters } from "../types";
 import { useSearch } from "../hooks/useSearch";
 import QueryPanel from "./QueryPanel";
 import ResultsGrid from "./ResultsGrid";
 import VideoModal from "./VideoModal";
+import ImageLightbox from "./ImageLightbox";
 
 export default function Layout() {
   const { results, loading, error, doSearch } = useSearch();
@@ -11,17 +12,23 @@ export default function Layout() {
     videoName: string;
     ptsTime: number;
   } | null>(null);
+  const [lightbox, setLightbox] = useState<string | null>(null);
 
   const handleSearch = (
     queries: QueryItem[],
     config: SearchConfig,
-    filters: { objects: string[] }
+    filters: SearchFilters,
+    imageQuery?: string
   ) => {
-    doSearch(queries, config, filters);
+    doSearch(queries, config, filters, imageQuery);
   };
 
   const handleClickKeyframe = (videoName: string, ptsTime: number) => {
     setVideo({ videoName, ptsTime });
+  };
+
+  const handleEnlargeImage = (imageUrl: string) => {
+    setLightbox(imageUrl);
   };
 
   return (
@@ -36,6 +43,7 @@ export default function Layout() {
             loading={loading}
             error={error}
             onClickKeyframe={handleClickKeyframe}
+            onEnlargeImage={handleEnlargeImage}
           />
         </div>
       </div>
@@ -44,6 +52,12 @@ export default function Layout() {
           videoName={video.videoName}
           ptsTime={video.ptsTime}
           onClose={() => setVideo(null)}
+        />
+      )}
+      {lightbox && (
+        <ImageLightbox
+          imageUrl={lightbox}
+          onClose={() => setLightbox(null)}
         />
       )}
     </>

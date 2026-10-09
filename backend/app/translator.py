@@ -1,21 +1,33 @@
-import logging
+import os
+from functools import lru_cache
+from pathlib import Path
 
-import requests
+from .config import settings
 
-requests.packages.urllib3.disable_warnings()
-
-logger = logging.getLogger(__name__)
-
-_session = requests.Session()
-_session.verify = False
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_client = None
 
 
+def _get_client():
+    global _client
+    if _client is not None:
+        return _client
+
+    creds = settings.GOOGLE_APPLICATION_CREDENTIALS
+    if creds:
+        creds_path = Path(creds)
+        if not creds_path.is_absolute():
+            creds_path = _PROJECT_ROOT / creds_path
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(creds_path)
+        print(f"GCP credentials: {creds_path} (exists={creds_path.exists()})")
+
+    from google.cloud import translate_v2 as translate
+    _client = translate.Client()
+    return _client
+
+
+@lru_cache(maxsize=256)
 def translate_vi_to_en(text: str) -> str:
-    resp = _session.get(
-        "https://translate.googleapis.com/translate_a/single",
-        params={"client": "gtx", "sl": "vi", "tl": "en", "dt": "t", "q": text},
-        timeout=5,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    return "".join(part[0] for part in data[0] if part[0])
+    client = _get_client()
+    result = client.translate(text, source_language="vi", target_language="en")
+    return result["translatedText"]

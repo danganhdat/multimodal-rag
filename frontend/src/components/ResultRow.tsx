@@ -5,17 +5,18 @@ interface Props {
   result: SearchResult;
   rank: number;
   onClickKeyframe: (videoName: string, ptsTime: number) => void;
+  onEnlargeImage: (imageUrl: string) => void;
 }
 
-export default function ResultRow({ result, rank, onClickKeyframe }: Props) {
+export default function ResultRow({ result, rank, onClickKeyframe, onEnlargeImage }: Props) {
   const allFrames = [
     ...result.neighbors
       .filter((n) => n.keyframe_idx < result.keyframe_idx)
-      .map((n) => ({ idx: n.keyframe_idx, isMain: false, imageUrl: n.image_url })),
-    { idx: result.keyframe_idx, isMain: true, imageUrl: result.image_url },
+      .map((n) => ({ idx: n.keyframe_idx, isMain: false, imageUrl: n.image_url, ptsTime: n.pts_time })),
+    { idx: result.keyframe_idx, isMain: true, imageUrl: result.image_url, ptsTime: result.pts_time },
     ...result.neighbors
       .filter((n) => n.keyframe_idx > result.keyframe_idx)
-      .map((n) => ({ idx: n.keyframe_idx, isMain: false, imageUrl: n.image_url })),
+      .map((n) => ({ idx: n.keyframe_idx, isMain: false, imageUrl: n.image_url, ptsTime: n.pts_time })),
   ];
 
   return (
@@ -25,8 +26,19 @@ export default function ResultRow({ result, rank, onClickKeyframe }: Props) {
           <span className="tag is-dark">#{rank}</span>
           <span className="tag is-info">{result.video_name}</span>
           <span className="tag is-warning">{result.score.toFixed(4)}</span>
-          <span className="is-size-7 has-text-grey">
+          {result.rerank_score !== null && (
+            <span className="tag is-success is-light">{result.rerank_score.toFixed(4)}</span>
+          )}
+          <span className="tag is-light">
             frame {result.frame_idx} | {result.pts_time.toFixed(1)}s
+          </span>
+          <span
+            className="tag is-dark"
+            style={{ cursor: "pointer" }}
+            title="Play video"
+            onClick={() => onClickKeyframe(result.video_name, result.pts_time)}
+          >
+            ▶ Play
           </span>
         </div>
         <div className="tags mb-0">
@@ -50,7 +62,7 @@ export default function ResultRow({ result, rank, onClickKeyframe }: Props) {
             keyframeIdx={f.idx}
             isMain={f.isMain}
             score={f.isMain ? result.score : undefined}
-            onClick={() => onClickKeyframe(result.video_name, result.pts_time)}
+            onEnlarge={() => onEnlargeImage(f.imageUrl)}
           />
         ))}
       </div>

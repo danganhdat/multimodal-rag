@@ -1,0 +1,789 @@
+[
+  {
+    "query_id": "query-p1-1-kis",
+    "query_type": "KIS",
+    "query": "Đây là phần giới thiệu việc phóng tàu vũ trụ tư nhân. Đoạn clip bắt đầu với hình ảnh 4 phi hành gia mặc áo đen. Một trong những nhiệm vụ dự kiến của tàu vũ trụ là nghiên cứu ánh sáng cực quang ở vùng cực",
+    "sentences": [
+      "Đây là phần giới thiệu việc phóng tàu vũ trụ tư nhân.",
+      "Đoạn clip bắt đầu với hình ảnh 4 phi hành gia mặc áo đen.",
+      "Một trong những nhiệm vụ dự kiến của tàu vũ trụ là nghiên cứu ánh sáng cực quang ở vùng cực"
+    ],
+    "num_sentences": 3,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-2-kis",
+    "query_type": "KIS",
+    "query": "Mẩu tin giới thiệu về đàn hổ tại một địa phương ở miền Nam vừa có thêm khoảng 3-6 con hổ con. Đây là một giống hổ quý hiếm",
+    "sentences": [
+      "Mẩu tin giới thiệu về đàn hổ tại một địa phương ở miền Nam vừa có thêm khoảng 3-6 con hổ con.",
+      "Đây là một giống hổ quý hiếm"
+    ],
+    "num_sentences": 2,
+    "candidates": [
+      {
+        "rank": 1,
+        "video_name": "L29_V002",
+        "keyframe_idx": 267,
+        "frame_idx": 14821,
+        "pts_time": 592.84,
+        "score": 0.0137,
+        "rerank_score": -1.2915,
+        "objects": [],
+        "ocr": "htv"
+      },
+      {
+        "rank": 2,
+        "video_name": "L28_V022",
+        "keyframe_idx": 132,
+        "frame_idx": 11334,
+        "pts_time": 453.36,
+        "score": 0.0091,
+        "rerank_score": -1.2915,
+        "objects": [],
+        "ocr": "htv"
+      },
+      {
+        "rank": 3,
+        "video_name": "L28_V008",
+        "keyframe_idx": 289,
+        "frame_idx": 19170,
+        "pts_time": 766.8,
+        "score": 0.0076,
+        "rerank_score": -1.2915,
+        "objects": [],
+        "ocr": "htv"
+      },
+      {
+        "rank": 4,
+        "video_name": "L28_V010",
+        "keyframe_idx": 96,
+        "frame_idx": 2520,
+        "pts_time": 100.8,
+        "score": 0.01,
+        "rerank_score": -2.0157,
+        "objects": [],
+        "ocr": "online"
+      },
+      {
+        "rank": 5,
+        "video_name": "L29_V011",
+        "keyframe_idx": 83,
+        "frame_idx": 1275,
+        "pts_time": 51.0,
+        "score": 0.0075,
+        "rerank_score": -2.0157,
+        "objects": [],
+        "ocr": "online"
+      }
+    ],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-5-kis",
+    "query_type": "KIS",
+    "query": "Đoạn clip cần tìm là cảnh hai người phụ nữ đang cho dê ăn: một người mặc áo thun trắng quàng áo đỏ trên vai, người kia mặc áo dài tay kẻ sọc tím truyền thống. Cả hai đều mỉm cười, tỏ vẻ thích thú.\nKhông gian trại rộng rãi, có mái che bằng tôn và hàng rào gỗ chia thành nhiều dãy chuồng, trong đó có hàng dài dê được nuôi nhốt.",
+    "sentences": [
+      "Đoạn clip cần tìm là cảnh hai người phụ nữ đang cho dê ăn: một người mặc áo thun trắng quàng áo đỏ trên vai, người kia mặc áo dài tay kẻ sọc tím truyền thống.",
+      "Cả hai đều mỉm cười, tỏ vẻ thích thú.",
+      "Không gian trại rộng rãi, có mái che bằng tôn và hàng rào gỗ chia thành nhiều dãy chuồng, trong đó có hàng dài dê được nuôi nhốt."
+    ],
+    "num_sentences": 3,
+    "candidates": [
+      {
+        "rank": 1,
+        "video_name": "L29_V023",
+        "keyframe_idx": 49,
+        "frame_idx": 1324,
+        "pts_time": 52.96,
+        "score": 0.0073,
+        "rerank_score": -3.4894,
+        "objects": [],
+        "ocr": "htv"
+      },
+      {
+        "rank": 2,
+        "video_name": "L27_V014",
+        "keyframe_idx": 149,
+        "frame_idx": 7290,
+        "pts_time": 291.6,
+        "score": 0.0164,
+        "rerank_score": -3.7575,
+        "objects": [],
+        "ocr": "htv online"
+      },
+      {
+        "rank": 3,
+        "video_name": "L28_V019",
+        "keyframe_idx": 333,
+        "frame_idx": 20115,
+        "pts_time": 804.6,
+        "score": 0.0118,
+        "rerank_score": -3.7575,
+        "objects": [],
+        "ocr": "htv online"
+      },
+      {
+        "rank": 4,
+        "video_name": "L29_V011",
+        "keyframe_idx": 234,
+        "frame_idx": 10367,
+        "pts_time": 414.68,
+        "score": 0.0101,
+        "rerank_score": -3.7575,
+        "objects": [],
+        "ocr": "htv online"
+      },
+      {
+        "rank": 5,
+        "video_name": "L29_V019",
+        "keyframe_idx": 108,
+        "frame_idx": 1327,
+        "pts_time": 53.08,
+        "score": 0.0104,
+        "rerank_score": -4.3712,
+        "objects": [],
+        "ocr": "online"
+      }
+    ],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-6-kis",
+    "query_type": "KIS",
+    "query": "Đoạn clip cần tìm bắt đầu bằng cảnh 1 người đầu bếp đặt đang đặt món gỏi cuốn chay bày trên đĩa, nhân gồm rau xanh cuộn tròn và đậu hũ, gói trong bánh tráng màu vàng và tím. Đĩa được trang trí thêm lá xanh và hoa pansy tím-vàng, tạo cảm giác thanh mát và tinh tế.",
+    "sentences": [
+      "Đoạn clip cần tìm bắt đầu bằng cảnh 1 người đầu bếp đặt đang đặt món gỏi cuốn chay bày trên đĩa, nhân gồm rau xanh cuộn tròn và đậu hũ, gói trong bánh tráng màu vàng và tím.",
+      "Đĩa được trang trí thêm lá xanh và hoa pansy tím-vàng, tạo cảm giác thanh mát và tinh tế."
+    ],
+    "num_sentences": 2,
+    "candidates": [
+      {
+        "rank": 1,
+        "video_name": "L26_V385",
+        "keyframe_idx": 144,
+        "frame_idx": 5932,
+        "pts_time": 237.28,
+        "score": 0.0161,
+        "rerank_score": -2.4255,
+        "objects": [
+          "person",
+          "dining table",
+          "carrot",
+          "broccoli",
+          "bowl"
+        ],
+        "ocr": "htv online ngo mai n"
+      },
+      {
+        "rank": 2,
+        "video_name": "L26_V341",
+        "keyframe_idx": 54,
+        "frame_idx": 2285,
+        "pts_time": 91.4,
+        "score": 0.0064,
+        "rerank_score": -2.5612,
+        "objects": [
+          "person",
+          "carrot",
+          "dining table"
+        ],
+        "ocr": "htv"
+      },
+      {
+        "rank": 3,
+        "video_name": "L26_V385",
+        "keyframe_idx": 139,
+        "frame_idx": 5760,
+        "pts_time": 230.4,
+        "score": 0.0159,
+        "rerank_score": -2.8052,
+        "objects": [
+          "person",
+          "dining table",
+          "carrot",
+          "bowl"
+        ],
+        "ocr": "htv online m ngo mai n"
+      },
+      {
+        "rank": 4,
+        "video_name": "L26_V347",
+        "keyframe_idx": 44,
+        "frame_idx": 1807,
+        "pts_time": 72.28,
+        "score": 0.0101,
+        "rerank_score": -2.8103,
+        "objects": [
+          "carrot",
+          "bowl",
+          "bowl",
+          "cake",
+          "person"
+        ],
+        "ocr": "htv online"
+      },
+      {
+        "rank": 5,
+        "video_name": "L26_V471",
+        "keyframe_idx": 118,
+        "frame_idx": 4942,
+        "pts_time": 197.68,
+        "score": 0.0068,
+        "rerank_score": -3.0636,
+        "objects": [
+          "person",
+          "bowl",
+          "carrot",
+          "dining table"
+        ],
+        "ocr": "htv online"
+      }
+    ],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-7-kis",
+    "query_type": "KIS",
+    "query": "Đoạn clip cần tìm là cảnh quay trong một khu rừng, dưới gốc cây to với nhiều lá khô phủ đầy mặt đất. Nổi bật ở cận cảnh là một chú chim có bộ lông đen ánh xanh ở đầu và thân trên, còn cánh và lưng màu nâu đỏ. Đôi mắt chim đỏ rực, tạo điểm nhấn rõ ràng. Đây là loài chim thường thấy ở vùng Nam Bộ Việt Nam.",
+    "sentences": [
+      "Đoạn clip cần tìm là cảnh quay trong một khu rừng, dưới gốc cây to với nhiều lá khô phủ đầy mặt đất.",
+      "Nổi bật ở cận cảnh là một chú chim có bộ lông đen ánh xanh ở đầu và thân trên, còn cánh và lưng màu nâu đỏ.",
+      "Đôi mắt chim đỏ rực, tạo điểm nhấn rõ ràng.",
+      "Đây là loài chim thường thấy ở vùng Nam Bộ Việt Nam."
+    ],
+    "num_sentences": 4,
+    "candidates": [
+      {
+        "rank": 1,
+        "video_name": "L30_V088",
+        "keyframe_idx": 12,
+        "frame_idx": 839,
+        "pts_time": 33.56,
+        "score": 0.0142,
+        "rerank_score": -3.3656,
+        "objects": [
+          "bird",
+          "bird",
+          "bird"
+        ],
+        "ocr": "tuoitretv"
+      },
+      {
+        "rank": 2,
+        "video_name": "L21_V021",
+        "keyframe_idx": 89,
+        "frame_idx": 10359,
+        "pts_time": 345.3,
+        "score": 0.0086,
+        "rerank_score": -3.407,
+        "objects": [],
+        "ocr": "htv9 06:36:33 hd y to xac minh clip tai xe chay o to dat phao nem xuong duong o quan 1, tp.hcm"
+      },
+      {
+        "rank": 3,
+        "video_name": "L30_V088",
+        "keyframe_idx": 17,
+        "frame_idx": 1089,
+        "pts_time": 43.56,
+        "score": 0.0164,
+        "rerank_score": -3.8918,
+        "objects": [
+          "bird"
+        ],
+        "ocr": "tuoitretv"
+      },
+      {
+        "rank": 4,
+        "video_name": "L29_V003",
+        "keyframe_idx": 236,
+        "frame_idx": 12300,
+        "pts_time": 492.0,
+        "score": 0.0416,
+        "rerank_score": -3.9363,
+        "objects": [
+          "bird",
+          "bird",
+          "bird"
+        ],
+        "ocr": "htv"
+      },
+      {
+        "rank": 5,
+        "video_name": "L27_V007",
+        "keyframe_idx": 207,
+        "frame_idx": 8630,
+        "pts_time": 345.2,
+        "score": 0.0213,
+        "rerank_score": -4.0812,
+        "objects": [
+          "bird"
+        ],
+        "ocr": "htv"
+      }
+    ],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-8-kis",
+    "query_type": "KIS",
+    "query": "Đoạn video về một lễ hội ẩm thực Nhật Bản lớn nhất thế giới. Hãy tìm chính xác phân cảnh một cô bé đeo một con bạch tuộc / con mực màu đỏ phía trước ngực. Trên tay cô bé có cầm một chiếc túi giấy.",
+    "sentences": [
+      "Đoạn video về một lễ hội ẩm thực Nhật Bản lớn nhất thế giới.",
+      "Hãy tìm chính xác phân cảnh một cô bé đeo một con bạch tuộc / con mực màu đỏ phía trước ngực.",
+      "Trên tay cô bé có cầm một chiếc túi giấy."
+    ],
+    "num_sentences": 3,
+    "candidates": [
+      {
+        "rank": 1,
+        "video_name": "L22_V030",
+        "keyframe_idx": 186,
+        "frame_idx": 17867,
+        "pts_time": 714.68,
+        "score": 0.0141,
+        "rerank_score": -4.6566,
+        "objects": [
+          "person",
+          "backpack",
+          "person",
+          "person",
+          "cup"
+        ],
+        "ocr": "okonomiyaki with japanese stp-fried yakisoba noodle & nº fried egg htv7 hd 18:43:52 re la soy vetin "
+      },
+      {
+        "rank": 2,
+        "video_name": "L22_V030",
+        "keyframe_idx": 180,
+        "frame_idx": 17460,
+        "pts_time": 698.4,
+        "score": 0.0125,
+        "rerank_score": -4.7324,
+        "objects": [
+          "person",
+          "person",
+          "person",
+          "person",
+          "handbag"
+        ],
+        "ocr": "htv7 hd 18:43:36 japan pro n tang cao sau 2 thang ap dung le phi 0 dong long an: khan truong hoan th"
+      },
+      {
+        "rank": 3,
+        "video_name": "L22_V027",
+        "keyframe_idx": 161,
+        "frame_idx": 19824,
+        "pts_time": 660.8,
+        "score": 0.0159,
+        "rerank_score": -4.9179,
+        "objects": [
+          "person",
+          "person",
+          "person",
+          "person",
+          "person"
+        ],
+        "ocr": "tuna ri tako vanit tuma mayo onigiri kombu htv7 onighiri. tua & ratonnaise 18:43:09 japan student fr"
+      },
+      {
+        "rank": 4,
+        "video_name": "L30_V021",
+        "keyframe_idx": 142,
+        "frame_idx": 2541,
+        "pts_time": 101.64,
+        "score": 0.0087,
+        "rerank_score": -4.9622,
+        "objects": [
+          "person",
+          "dining table",
+          "backpack"
+        ],
+        "ocr": "tuoi tretv"
+      },
+      {
+        "rank": 5,
+        "video_name": "L22_V030",
+        "keyframe_idx": 183,
+        "frame_idx": 17700,
+        "pts_time": 708.0,
+        "score": 0.0115,
+        "rerank_score": -4.9696,
+        "objects": [
+          "person",
+          "person",
+          "person",
+          "person",
+          "person"
+        ],
+        "ocr": "htv7 hd 18:43:46 new york. japan fes n.y.k. iapanfes tsukji gindaco nelmaromen tapan tukjii gindacao"
+      }
+    ],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-9-kis",
+    "query_type": "KIS",
+    "query": "Đoạn clip là cảnh thu hoạch dứa ở miền Tây: một bà cụ ngồi bên giỏ dứa trò chuyện với cô gái mặc áo hồng quàng khăn rằn; xung quanh chất đầy dứa, phía sau có người phụ nữ đội nón lá cầm trái dứa và một chiếc ghe xanh đậu cạnh bờ, tạo không khí nông thôn mộc mạc, yên bình.",
+    "sentences": [
+      "Đoạn clip là cảnh thu hoạch dứa ở miền Tây: một bà cụ ngồi bên giỏ dứa trò chuyện với cô gái mặc áo hồng quàng khăn rằn; xung quanh chất đầy dứa, phía sau có người phụ nữ đội nón lá cầm trái dứa và một chiếc ghe xanh đậu cạnh bờ, tạo không khí nông thôn mộc mạc, yên bình."
+    ],
+    "num_sentences": 1,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-10-kis",
+    "query_type": "KIS",
+    "query": "Tìm chính xác đoạn clip ngắn có ba người (hai phụ nữ và một nam giới) đang ngồi cạnh nhau, tập trung chơi nhạc cụ kim loại có dạng tròn, rỗng, với các vết lõm để tạo ra âm thanh khi gõ tay. Có 1 người mặc áo trắng ngồi giữa 2 người mặc áo đen. Bối cảnh phía sau là một kệ sách nhiều ngăn, xếp đầy sách với nhiều màu sắc",
+    "sentences": [
+      "Tìm chính xác đoạn clip ngắn có ba người (hai phụ nữ và một nam giới) đang ngồi cạnh nhau, tập trung chơi nhạc cụ kim loại có dạng tròn, rỗng, với các vết lõm để tạo ra âm thanh khi gõ tay.",
+      "Có 1 người mặc áo trắng ngồi giữa 2 người mặc áo đen.",
+      "Bối cảnh phía sau là một kệ sách nhiều ngăn, xếp đầy sách với nhiều màu sắc"
+    ],
+    "num_sentences": 3,
+    "candidates": [
+      {
+        "rank": 1,
+        "video_name": "L30_V017",
+        "keyframe_idx": 49,
+        "frame_idx": 2458,
+        "pts_time": 98.32,
+        "score": 0.009,
+        "rerank_score": -6.2194,
+        "objects": [
+          "person",
+          "person",
+          "chair",
+          "chair",
+          "book"
+        ],
+        "ocr": "tuoi tretv a k m anh do cong quan (vinh phuc) thanh vien cau lac bg hang drum viet nam"
+      },
+      {
+        "rank": 2,
+        "video_name": "L30_V081",
+        "keyframe_idx": 67,
+        "frame_idx": 4248,
+        "pts_time": 169.92,
+        "score": 0.0114,
+        "rerank_score": -6.2463,
+        "objects": [
+          "person",
+          "person",
+          "person",
+          "cup",
+          "cup"
+        ],
+        "ocr": "tet thien ventron tuorthetv tun 67.2476109 sc sos xatanng xa tan mi sos x a tan mo xai tan hoa ---"
+      },
+      {
+        "rank": 3,
+        "video_name": "L25_V070",
+        "keyframe_idx": 339,
+        "frame_idx": 32263,
+        "pts_time": 1076.54,
+        "score": 0.0097,
+        "rerank_score": -6.3923,
+        "objects": [
+          "person"
+        ],
+        "ocr": "1"
+      },
+      {
+        "rank": 4,
+        "video_name": "L21_V009",
+        "keyframe_idx": 160,
+        "frame_idx": 16305,
+        "pts_time": 652.2,
+        "score": 0.0139,
+        "rerank_score": -6.4598,
+        "objects": [
+          "person",
+          "person",
+          "person",
+          "person",
+          "chair"
+        ],
+        "ocr": "htv9 06:44:00 hd eu cam ket tiep tuc ung ho ucraina nga cam ket tai lap quyen kiem soat bien giai sa"
+      },
+      {
+        "rank": 5,
+        "video_name": "L21_V025",
+        "keyframe_idx": 171,
+        "frame_idx": 16590,
+        "pts_time": 663.6,
+        "score": 0.0104,
+        "rerank_score": -6.4695,
+        "objects": [
+          "person",
+          "person",
+          "person"
+        ],
+        "ocr": "htv9 hd 06:42:41 le de oue 1999 ieu usd ing pho vai dich benh dau mua khi who canh bao ve lan song d"
+      }
+    ],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-11-kis",
+    "query_type": "KIS",
+    "query": "Trong đoạn clip có là một chàng trai đội mũ lưỡi trai đen, mặc áo thun trắng có dòng chữ tiếng Anh, đang ngồi cạnh một chiếc hộp. Trên hộp, anh sắp xếp nhiều mảnh bìa cắt rời với hình thù ngẫu nhiên.\nNhờ ánh sáng chiếu từ một phía, các mảnh bìa đó đổ bóng lên tường, tạo thành hình chân dung một người đàn ông với khuôn mặt rõ nét, tóc vuốt gọn và mặc vest.",
+    "sentences": [
+      "Trong đoạn clip có là một chàng trai đội mũ lưỡi trai đen, mặc áo thun trắng có dòng chữ tiếng Anh, đang ngồi cạnh một chiếc hộp.",
+      "Trên hộp, anh sắp xếp nhiều mảnh bìa cắt rời với hình thù ngẫu nhiên.",
+      "Nhờ ánh sáng chiếu từ một phía, các mảnh bìa đó đổ bóng lên tường, tạo thành hình chân dung một người đàn ông với khuôn mặt rõ nét, tóc vuốt gọn và mặc vest."
+    ],
+    "num_sentences": 3,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-12-kis",
+    "query_type": "KIS",
+    "query": "Đoạn video mô tả cảnh trang trí bánh rán. Phân cảnh bắt đầu là một chiếc đĩa sứ màu trắng nằm trên một khay gỗ hình chữ nhật. Bên cạnh chiếc đĩa sứ là một chén đựng một vài trái dâu, nhưng có 2 trái bị rơi ra ngoài. Ngoài ra, bên cạnh đĩa sứ còn có một chén sứ nhỏ màu trắng đựng chuối đã được cắt sẵn và một cái thìa nhỏ màu nâu. Phân cảnh tiếp theo cho thấy đầu bếp đặt 2 chiếc bánh rán lên đĩa sứ và bắt đầu trang trí. Bước đầu tiên là việc rưới chocolate lên trên mặt bánh. Sau đó, đầu bếp đặt các lát chuối lên trên một chiếc bánh rán, chiếc còn lại được đặt các lát dâu tây lên.",
+    "sentences": [
+      "Đoạn video mô tả cảnh trang trí bánh rán.",
+      "Phân cảnh bắt đầu là một chiếc đĩa sứ màu trắng nằm trên một khay gỗ hình chữ nhật.",
+      "Bên cạnh chiếc đĩa sứ là một chén đựng một vài trái dâu, nhưng có 2 trái bị rơi ra ngoài.",
+      "Ngoài ra, bên cạnh đĩa sứ còn có một chén sứ nhỏ màu trắng đựng chuối đã được cắt sẵn và một cái thìa nhỏ màu nâu.",
+      "Phân cảnh tiếp theo cho thấy đầu bếp đặt 2 chiếc bánh rán lên đĩa sứ và bắt đầu trang trí.",
+      "Bước đầu tiên là việc rưới chocolate lên trên mặt bánh.",
+      "Sau đó, đầu bếp đặt các lát chuối lên trên một chiếc bánh rán, chiếc còn lại được đặt các lát dâu tây lên."
+    ],
+    "num_sentences": 7,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-13-kis",
+    "query_type": "KIS",
+    "query": "Đoạn video mô tả một người ngồi vệ sinh máy ảnh. Công đoạn này bắt đầu bằng việc tháo rời máy ảnh. Tiếp theo, chiếc ống kính đã được tháo rời và được đặt ngay ngắn trên một chiếc khăn màu tím hồng. Phân cảnh cuối cùng là vệ sinh ống kính (lens) bằng một chiếc tăm bông.",
+    "sentences": [
+      "Đoạn video mô tả một người ngồi vệ sinh máy ảnh.",
+      "Công đoạn này bắt đầu bằng việc tháo rời máy ảnh.",
+      "Tiếp theo, chiếc ống kính đã được tháo rời và được đặt ngay ngắn trên một chiếc khăn màu tím hồng.",
+      "Phân cảnh cuối cùng là vệ sinh ống kính (lens) bằng một chiếc tăm bông."
+    ],
+    "num_sentences": 4,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-14-kis",
+    "query_type": "KIS",
+    "query": "Đoạn clip bắt đầu với cảnh một tác phẩm điêu khắc cát hoành tráng tại Lễ hội điêu khắc trên cát. Tác phẩm mô tả cảnh những thanh niên chơi thể thao đường phố: một người trượt patin, hai người trượt ván\nNền phía sau là họa tiết vòm cong lớn và có khắc chữ.\nTiếp theo có cảnh nhiều tác phẩm khác bằng cát, và có 2 cột khói màu hồng",
+    "sentences": [
+      "Đoạn clip bắt đầu với cảnh một tác phẩm điêu khắc cát hoành tráng tại Lễ hội điêu khắc trên cát.",
+      "Tác phẩm mô tả cảnh những thanh niên chơi thể thao đường phố: một người trượt patin, hai người trượt ván",
+      "Nền phía sau là họa tiết vòm cong lớn và có khắc chữ.",
+      "Tiếp theo có cảnh nhiều tác phẩm khác bằng cát, và có 2 cột khói màu hồng"
+    ],
+    "num_sentences": 4,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-15-qa",
+    "query_type": "QA",
+    "query": "Đoạn video về một chương trình từ thiện của một câu lạc bộ tên là FANA. Trong đoạn video có thể thấy câu lạc bộ này đang đi trao quà tại một xã thuộc tỉnh Khánh Hòa. Hỏi xã này có tên là gì? (tại thời điểm đó)",
+    "sentences": [
+      "Đoạn video về một chương trình từ thiện của một câu lạc bộ tên là FANA.",
+      "Trong đoạn video có thể thấy câu lạc bộ này đang đi trao quà tại một xã thuộc tỉnh Khánh Hòa.",
+      "Hỏi xã này có tên là gì? (tại thời điểm đó)"
+    ],
+    "num_sentences": 3,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-17-kis",
+    "query_type": "KIS",
+    "query": "Đoạn video trong buổi trao quà từ thiện diễn ra tại 1 bệnh viện trong dịp Xuân 2024. Trong cảnh có hai người đàn ông (mặc áo sơ mi hồng và sơ mi trắng) đứng hai bên, đại diện ban tổ chức. Ở giữa là bốn em nhỏ và thiếu niên, trong đó có em mặc áo đỏ, em mặc áo trắng, em mặc váy hồng và em mặc áo xanh. Các em được trao bảng tượng trưng với nội dung “Chương trình: Trao kinh phí hỗ trợ cho trẻ em mồ côi do dịch COVID-19”. Trước mặt mỗi em là túi quà lớn mang logo y tế. Phía sau là phông nền màu đỏ với khẩu hiệu đón xuân và thông tin sự kiện.",
+    "sentences": [
+      "Đoạn video trong buổi trao quà từ thiện diễn ra tại 1 bệnh viện trong dịp Xuân 2024.",
+      "Trong cảnh có hai người đàn ông (mặc áo sơ mi hồng và sơ mi trắng) đứng hai bên, đại diện ban tổ chức.",
+      "Ở giữa là bốn em nhỏ và thiếu niên, trong đó có em mặc áo đỏ, em mặc áo trắng, em mặc váy hồng và em mặc áo xanh.",
+      "Các em được trao bảng tượng trưng với nội dung “Chương trình: Trao kinh phí hỗ trợ cho trẻ em mồ côi do dịch COVID-19”.",
+      "Trước mặt mỗi em là túi quà lớn mang logo y tế.",
+      "Phía sau là phông nền màu đỏ với khẩu hiệu đón xuân và thông tin sự kiện."
+    ],
+    "num_sentences": 6,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-19-qa",
+    "query_type": "QA",
+    "query": "Trong đoạn video có 2 câu thơ của một nhà thơ ca ngợi anh hùng Nguyễn Trung Trực trong đình thần Nguyễn Trung Trực tại Kiên Giang. Hai câu thơ đó là gì?",
+    "sentences": [
+      "Trong đoạn video có 2 câu thơ của một nhà thơ ca ngợi anh hùng Nguyễn Trung Trực trong đình thần Nguyễn Trung Trực tại Kiên Giang.",
+      "Hai câu thơ đó là gì?"
+    ],
+    "num_sentences": 2,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-20-kis",
+    "query_type": "KIS",
+    "query": "Trên đĩa tròn màu trắng có 1 ly panna cotta. Có một bàn tay lần lượt đặt thêm 2 ly panna cotta nữa vào đĩa.\nMỗi ly panna cotta có lớp kem mịn màu trắng ngà, bên trên trang trí vài lát nho đỏ, thêm lá bạc hà xanh tạo điểm nhấn tươi mát.\nBên cạnh trên đĩa còn có hai bông hoa ăn được (màu đỏ và vàng) để tăng phần đẹp mắt.",
+    "sentences": [
+      "Trên đĩa tròn màu trắng có 1 ly panna cotta.",
+      "Có một bàn tay lần lượt đặt thêm 2 ly panna cotta nữa vào đĩa.",
+      "Mỗi ly panna cotta có lớp kem mịn màu trắng ngà, bên trên trang trí vài lát nho đỏ, thêm lá bạc hà xanh tạo điểm nhấn tươi mát.",
+      "Bên cạnh trên đĩa còn có hai bông hoa ăn được (màu đỏ và vàng) để tăng phần đẹp mắt."
+    ],
+    "num_sentences": 4,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-21-kis",
+    "query_type": "KIS",
+    "query": "Đoạn video vể nghiên cứu tại 1 Đại học ở thành phố Lausanne về việc nghiên cứu cơ chế bay của bọ để chế tạo robot",
+    "sentences": [
+      "Đoạn video vể nghiên cứu tại 1 Đại học ở thành phố Lausanne về việc nghiên cứu cơ chế bay của bọ để chế tạo robot"
+    ],
+    "num_sentences": 1,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-22-qa",
+    "query_type": "QA",
+    "query": "Đoạn video về một người phụ nữ dạy nấu ăn cho những người khác. Trong đoạn video có thể thấy một người đang cầm công thức món ăn với nguyên liệu chính là 200g thịt nạc xay. Hỏi tiêu đề của công thức nấu ăn (tên món ăn) này là gì?",
+    "sentences": [
+      "Đoạn video về một người phụ nữ dạy nấu ăn cho những người khác.",
+      "Trong đoạn video có thể thấy một người đang cầm công thức món ăn với nguyên liệu chính là 200g thịt nạc xay.",
+      "Hỏi tiêu đề của công thức nấu ăn (tên món ăn) này là gì?"
+    ],
+    "num_sentences": 3,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-23-kis",
+    "query_type": "KIS",
+    "query": "Đoạn clip về 1 thị trấn ven biển thu hút du khách hiếu kỳ nhờ 1 loài động vật biển nguy hiểm. Loài động vật này nổi tiếng trong 1 bộ phim của đạo diễn Steven Spielberg được sản xuất vào năm 1975",
+    "sentences": [
+      "Đoạn clip về 1 thị trấn ven biển thu hút du khách hiếu kỳ nhờ 1 loài động vật biển nguy hiểm.",
+      "Loài động vật này nổi tiếng trong 1 bộ phim của đạo diễn Steven Spielberg được sản xuất vào năm 1975"
+    ],
+    "num_sentences": 2,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-24-kis",
+    "query_type": "KIS",
+    "query": "Đoạn video về tường thuật một cuộc đua xe đạp. Tìm phân cảnh với góc quay trực diện từ trên cao xuống dõi theo các tay đua. Trong khung hình gồm có 3 tay đua đang đạp thành một đường thẳng. Cả 3 tay đua đều đến từ cùng một đội, với đồng phục áo trắng quần vàng xanh. Tay đua đầu tiên đội nón trắng, tay đua thứ hai đội nón đỏ và tay đua cuối cùng đội nón đen.",
+    "sentences": [
+      "Đoạn video về tường thuật một cuộc đua xe đạp.",
+      "Tìm phân cảnh với góc quay trực diện từ trên cao xuống dõi theo các tay đua.",
+      "Trong khung hình gồm có 3 tay đua đang đạp thành một đường thẳng.",
+      "Cả 3 tay đua đều đến từ cùng một đội, với đồng phục áo trắng quần vàng xanh.",
+      "Tay đua đầu tiên đội nón trắng, tay đua thứ hai đội nón đỏ và tay đua cuối cùng đội nón đen."
+    ],
+    "num_sentences": 5,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  },
+  {
+    "query_id": "query-p1-25-kis",
+    "query_type": "KIS",
+    "query": "Tìm một đoạn video đua xe đạp, góc quay từ flycam trên cao, một vận động viên mặc áo xanh dương, trắng đang vượt ba vận động viên khác và lên vị trí dẫn đầu. Biết sau đó vận động viên này dẫn đầu suốt đoạn đường còn lại đến đích.",
+    "sentences": [
+      "Tìm một đoạn video đua xe đạp, góc quay từ flycam trên cao, một vận động viên mặc áo xanh dương, trắng đang vượt ba vận động viên khác và lên vị trí dẫn đầu.",
+      "Biết sau đó vận động viên này dẫn đầu suốt đoạn đường còn lại đến đích."
+    ],
+    "num_sentences": 2,
+    "candidates": [],
+    "selected": null,
+    "video_name": null,
+    "frame_idx": null,
+    "frame_range": null,
+    "eval_query": null
+  }
+]

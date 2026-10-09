@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 380" font-family="Segoe UI, Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+    </marker>
+  </defs>
+
+  <text x="430" y="28" text-anchor="middle" font-size="17" font-weight="bold" fill="#333">Pipeline tiền xử lý và nạp dữ liệu</text>
+
+  <!-- Source: Videos -->
+  <rect x="30" y="60" width="150" height="70" rx="8" fill="#E3F2FD" stroke="#4A90D9" stroke-width="1.5"/>
+  <text x="105" y="88" text-anchor="middle" fill="#333" font-weight="bold">Video gốc</text>
+  <text x="105" y="106" text-anchor="middle" fill="#666" font-size="11">AIC 2025 dataset</text>
+
+  <!-- Keyframe extraction -->
+  <rect x="220" y="55" width="150" height="80" rx="8" fill="#4A90D9" stroke="#357ABD" stroke-width="1.5"/>
+  <text x="295" y="80" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">Trích keyframes</text>
+  <text x="295" y="98" text-anchor="middle" fill="#E8F0FE" font-size="10">SceneDetect /</text>
+  <text x="295" y="112" text-anchor="middle" fill="#E8F0FE" font-size="10">TransNetV2</text>
+  <line x1="180" y1="95" x2="218" y2="95" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Branch 1: CLIP -->
+  <rect x="430" y="50" width="160" height="55" rx="8" fill="#5CB85C" stroke="#449D44" stroke-width="1.5"/>
+  <text x="510" y="73" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">CLIP Encoding</text>
+  <text x="510" y="91" text-anchor="middle" fill="#E8F8E8" font-size="10">ViT-B/32 → 512-dim .npy</text>
+  <line x1="370" y1="78" x2="428" y2="78" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Branch 2: OCR -->
+  <rect x="430" y="125" width="160" height="55" rx="8" fill="#F0AD4E" stroke="#EC971F" stroke-width="1.5"/>
+  <text x="510" y="148" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">OCR (Florence-2)</text>
+  <text x="510" y="166" text-anchor="middle" fill="#FFF8E1" font-size="10">177,321 keyframes → .pkl</text>
+  <line x1="370" y1="100" x2="400" y2="140" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Branch 3: Object Detection -->
+  <rect x="430" y="200" width="160" height="55" rx="8" fill="#D9534F" stroke="#C9302C" stroke-width="1.5"/>
+  <text x="510" y="223" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">Object Detection</text>
+  <text x="510" y="241" text-anchor="middle" fill="#FCE4E4" font-size="10">Faster R-CNN → .json</text>
+  <line x1="370" y1="110" x2="400" y2="215" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Branch 4: Metadata -->
+  <rect x="430" y="275" width="160" height="55" rx="8" fill="#9B59B6" stroke="#8E44AD" stroke-width="1.5"/>
+  <text x="510" y="298" text-anchor="middle" fill="#fff" font-weight="bold" font-size="12">Metadata CSV</text>
+  <text x="510" y="316" text-anchor="middle" fill="#F0E6F6" font-size="10">frame_idx, pts_time, fps</text>
+  <line x1="370" y1="120" x2="400" y2="290" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Ingest script -->
+  <rect x="650" y="130" width="160" height="90" rx="8" fill="#2C3E50" stroke="#1A252F" stroke-width="1.5"/>
+  <text x="730" y="158" text-anchor="middle" fill="#fff" font-weight="bold" font-size="13">Ingest Script</text>
+  <text x="730" y="176" text-anchor="middle" fill="#BDC3C7" font-size="10">Merge all sources</text>
+  <text x="730" y="192" text-anchor="middle" fill="#BDC3C7" font-size="10">→ batch insert 1000</text>
+  <text x="730" y="208" text-anchor="middle" fill="#BDC3C7" font-size="10">python -m backend.scripts.ingest</text>
+
+  <line x1="590" y1="78" x2="648" y2="155" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="590" y1="152" x2="648" y2="168" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="590" y1="228" x2="648" y2="190" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+  <line x1="590" y1="302" x2="648" y2="205" stroke="#555" stroke-width="1.3" marker-end="url(#ar)"/>
+
+  <!-- Milvus -->
+  <rect x="650" y="265" width="160" height="70" rx="8" fill="#9B59B6" stroke="#8E44AD" stroke-width="2"/>
+  <text x="730" y="293" text-anchor="middle" fill="#fff" font-weight="bold" font-size="14">Milvus</text>
+  <text x="730" y="313" text-anchor="middle" fill="#F0E6F6" font-size="11">COSINE index</text>
+  <text x="730" y="327" text-anchor="middle" fill="#F0E6F6" font-size="11">Vector DB</text>
+  <line x1="730" y1="220" x2="730" y2="263" stroke="#555" stroke-width="1.5" marker-end="url(#ar)"/>
+
+  <!-- Schema note -->
+  <rect x="40" y="180" width="340" height="170" rx="8" fill="#F8F9FA" stroke="#DEE2E6" stroke-width="1"/>
+  <text x="55" y="202" fill="#333" font-weight="bold" font-size="12">Schema Milvus Collection</text>
+  <text x="55" y="222" fill="#555" font-size="11" font-family="Consolas, monospace">id          VARCHAR(32)   PK</text>
+  <text x="55" y="238" fill="#555" font-size="11" font-family="Consolas, monospace">video_name  VARCHAR(16)</text>
+  <text x="55" y="254" fill="#555" font-size="11" font-family="Consolas, monospace">keyframe_idx INT32</text>
+  <text x="55" y="270" fill="#555" font-size="11" font-family="Consolas, monospace">frame_idx   INT64</text>
+  <text x="55" y="286" fill="#555" font-size="11" font-family="Consolas, monospace">clip_vector FLOAT_VECTOR(512)</text>
+  <text x="55" y="302" fill="#555" font-size="11" font-family="Consolas, monospace">objects     ARRAY&lt;VARCHAR&gt;</text>
+  <text x="55" y="318" fill="#555" font-size="11" font-family="Consolas, monospace">ocr         VARCHAR(4096)</text>
+  <text x="55" y="334" fill="#555" font-size="11" font-family="Consolas, monospace">pts_time    FLOAT,  fps  FLOAT</text>
+</svg>

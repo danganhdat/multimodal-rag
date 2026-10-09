@@ -1,0 +1,41 @@
+sequenceDiagram
+    participant U as User
+    participant FE as Frontend<br/>(React)
+    participant BE as Backend<br/>(FastAPI)
+    participant TR as Google Translate
+    participant ENC as SigLIP2 Encoder
+    participant MV as Milvus
+    participant RR as BGE Reranker
+
+    U->>FE: Enter query (Vietnamese paragraph)
+    FE->>BE: POST /api/search<br/>{queries: [...], config: {rerank: true}}
+
+    Note over BE: Split paragraph into N sentences
+
+    loop For each sentence
+        BE->>TR: Translate VI → EN
+        TR-->>BE: English sentence
+        BE->>ENC: encode_text(sentence)
+        ENC-->>BE: 768-dim vector
+    end
+
+    alt N = 1 (single sentence)
+        BE->>MV: search_single(vector, top_k=200)
+    else N > 1 (multi-sentence)
+        BE->>MV: search_hybrid(N vectors, RRF k=60)
+    end
+
+    MV-->>BE: Top 200 candidates
+
+    Note over BE: Tier 2 — Cross-Encoder Reranking
+
+    loop For each candidate
+        Note over RR: score(query, objects + OCR text)
+    end
+    BE->>RR: rerank(query, candidates, top_k)
+    RR-->>BE: Top K sorted by rerank_score
+
+    Note over BE: Build results + neighbor frames
+
+    BE-->>FE: SearchResponse<br/>{results, translations, search_time_ms}
+    FE-->>U: Display ranked keyframes

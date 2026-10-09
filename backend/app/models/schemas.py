@@ -11,8 +11,11 @@ class RankerType(str, Enum):
 
 class MetricType(str, Enum):
     COSINE = "COSINE"
-    IP = "IP"
-    L2 = "L2"
+
+
+class EncoderMode(str, Enum):
+    CLIP = "clip"
+    SIGLIP2 = "siglip2"
 
 
 class QueryItem(BaseModel):
@@ -31,18 +34,20 @@ class SearchConfig(BaseModel):
     group_by_video: bool = False
     use_client_merge: bool = False
     rerank: bool = False
-    rerank_candidates: int = 200
+    rerank_candidates: int = 20
+    encoder_mode: EncoderMode = EncoderMode.SIGLIP2
 
 
-class ObjectFilter(BaseModel):
+class SearchFilters(BaseModel):
     objects: list[str] = []
+    ocr: list[str] = []
 
 
 class SearchRequest(BaseModel):
     queries: list[QueryItem]
     image_query: Optional[str] = None
     config: SearchConfig = Field(default_factory=SearchConfig)
-    filters: Optional[ObjectFilter] = None
+    filters: Optional[SearchFilters] = None
 
 
 class NeighborFrame(BaseModel):
@@ -62,6 +67,7 @@ class SearchResult(BaseModel):
     score: float
     rerank_score: float | None = None
     objects: list[str]
+    ocr: str = ""
     neighbors: list[NeighborFrame]
     image_url: str
 

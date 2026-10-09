@@ -18,6 +18,7 @@ class MilvusSearchService:
         "pts_time",
         "fps",
         "objects",
+        "ocr",
     ]
 
     def search_single(
@@ -27,12 +28,13 @@ class MilvusSearchService:
         metric_type: str = "COSINE",
         filter_expr: str | None = None,
         group_by_video: bool = False,
+        anns_field: str = "clip_vector",
     ) -> list[dict]:
-        params = {"metric_type": metric_type}
+        params = {"metric_type": metric_type, "params": {"ef": 512}}
         kwargs: dict = {
             "collection_name": self.collection,
             "data": [vector],
-            "anns_field": "clip_vector",
+            "anns_field": anns_field,
             "limit": top_k,
             "search_params": params,
             "output_fields": self.OUTPUT_FIELDS,
@@ -55,13 +57,16 @@ class MilvusSearchService:
         rrf_k: int = 60,
         weights: list[float] | None = None,
         filter_expr: str | None = None,
+        anns_fields: list[str] | None = None,
     ) -> list[dict]:
         reqs = []
-        for vec in vectors:
+        for i, vec in enumerate(vectors):
+            field = (anns_fields[i] if anns_fields and i < len(anns_fields)
+                     else "clip_vector")
             req = AnnSearchRequest(
                 data=[vec],
-                anns_field="clip_vector",
-                param={"metric_type": metric_type},
+                anns_field=field,
+                param={"metric_type": metric_type, "params": {"ef": 512}},
                 limit=sub_k,
                 expr=filter_expr or "",
             )
