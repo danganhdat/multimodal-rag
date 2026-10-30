@@ -1,8 +1,11 @@
 import asyncio
+import logging
 
 from fastapi import APIRouter
 
 from ..models.schemas import TranslateRequest, TranslateResponse
+
+logger = logging.getLogger(__name__)
 from ..translator import translate_vi_to_en
 
 router = APIRouter()
@@ -17,7 +20,7 @@ async def translate(body: TranslateRequest):
     try:
         translated = await asyncio.to_thread(translate_vi_to_en, text)
     except Exception as e:
-        print(f"Translation failed: {e}")
+        logger.warning("Translation failed: %s", e)
         translated = body.text
 
     return TranslateResponse(original=body.text, translated=translated)

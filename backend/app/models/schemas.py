@@ -13,11 +13,6 @@ class MetricType(str, Enum):
     COSINE = "COSINE"
 
 
-class EncoderMode(str, Enum):
-    CLIP = "clip"
-    SIGLIP2 = "siglip2"
-
-
 class QueryItem(BaseModel):
     text: str
     lang: str = "en"
@@ -33,9 +28,6 @@ class SearchConfig(BaseModel):
     neighbor_window: int = 5
     group_by_video: bool = False
     use_client_merge: bool = False
-    rerank: bool = False
-    rerank_candidates: int = 20
-    encoder_mode: EncoderMode = EncoderMode.SIGLIP2
 
 
 class SearchFilters(BaseModel):
@@ -65,7 +57,6 @@ class SearchResult(BaseModel):
     pts_time: float
     fps: float
     score: float
-    rerank_score: float | None = None
     objects: list[str]
     ocr: str = ""
     neighbors: list[NeighborFrame]

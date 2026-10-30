@@ -7,6 +7,10 @@ interface Props {
   error: string | null;
   onClickKeyframe: (videoName: string, ptsTime: number) => void;
   onEnlargeImage: (imageUrl: string) => void;
+  upvoteIds?: string[];
+  downvoteIds?: string[];
+  onUpvote?: (id: string) => void;
+  onDownvote?: (id: string) => void;
 }
 
 export default function ResultsGrid({
@@ -15,6 +19,10 @@ export default function ResultsGrid({
   error,
   onClickKeyframe,
   onEnlargeImage,
+  upvoteIds = [],
+  downvoteIds = [],
+  onUpvote,
+  onDownvote,
 }: Props) {
   if (loading) {
     return (
@@ -41,7 +49,7 @@ export default function ResultsGrid({
     );
   }
 
-  if (response.results.length === 0) {
+  if (!response.results || response.results.length === 0) {
     return (
       <div className="has-text-centered p-6 has-text-grey">
         <p>No results found.</p>
@@ -53,7 +61,8 @@ export default function ResultsGrid({
     <div className="p-3">
       <div className="is-flex is-justify-content-space-between is-align-items-center mb-3">
         <span className="is-size-7 has-text-grey">
-          {response.results.length} results in {response.search_time_ms.toFixed(0)}ms
+          {response.results.length} results in{" "}
+          {(response.search_time_ms ?? 0).toFixed(0)}ms
         </span>
         {Object.keys(response.translations).length > 0 && (
           <span className="tag is-info is-light is-small">
@@ -68,6 +77,10 @@ export default function ResultsGrid({
           rank={i + 1}
           onClickKeyframe={onClickKeyframe}
           onEnlargeImage={onEnlargeImage}
+          upvoted={upvoteIds.includes(result.id)}
+          downvoted={downvoteIds.includes(result.id)}
+          onUpvote={onUpvote}
+          onDownvote={onDownvote}
         />
       ))}
     </div>

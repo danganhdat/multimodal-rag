@@ -1,0 +1,1339 @@
+\documentclass[12pt,a4paper,onecolumn]{article}
+
+% ── Fonts & Language (XeLaTeX) ──────────────────────────────────
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{TeX Gyre Cursor}[Scale=0.85]
+
+% ── Math ────────────────────────────────────────────────────────
+\usepackage{amsmath,amssymb}
+
+% ── Graphics ────────────────────────────────────────────────────
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage[labelfont=bf,font=small]{caption}
+\graphicspath{{images/}}
+
+% ── Tables ──────────────────────────────────────────────────────
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{makecell}
+\renewcommand\theadfont{\bfseries\small}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+
+% ── Code Listings ───────────────────────────────────────────────
+\usepackage{listings}
+\usepackage{xcolor}
+\lstset{
+  basicstyle=\small\ttfamily,
+  breaklines=true,
+  frame=single,
+  framesep=3pt,
+  rulecolor=\color{gray!40},
+  backgroundcolor=\color{gray!5},
+  numbers=none,
+  showstringspaces=false,
+  tabsize=2,
+  xleftmargin=6pt,
+  xrightmargin=6pt,
+  literate={─}{{\textendash}}1 {│}{|}1 {├}{|}1 {└}{|}1,
+}
+\lstdefinestyle{python}{
+  language=Python,
+  keywordstyle=\color{blue!70!black}\bfseries,
+  stringstyle=\color{green!50!black},
+  commentstyle=\color{gray!60}\itshape,
+}
+
+% ── Layout ──────────────────────────────────────────────────────
+\usepackage[top=2.5cm,bottom=2.5cm,left=2.5cm,right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\setlength{\parindent}{1em}
+\setlength{\parskip}{0.3em}
+
+% ── Section Formatting ──────────────────────────────────────────
+\usepackage{titlesec}
+\titleformat{\section}{\Large\bfseries}{\thesection.}{0.5em}{}
+\titleformat{\subsection}{\large\bfseries}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.5ex plus 0.5ex}{1ex plus 0.3ex}
+\titlespacing*{\subsection}{0pt}{1.2ex plus 0.3ex}{0.8ex plus 0.2ex}
+
+% ── Hyperlinks ──────────────────────────────────────────────────
+\usepackage[colorlinks=true,linkcolor=blue!60!black,citecolor=green!50!black,urlcolor=blue!60!black]{hyperref}
+
+% ── TODO markers ────────────────────────────────────────────────
+\newcommand{\todofill}[1]{\textcolor{red}{\footnotesize[TODO: #1]}}
+
+% ── Header / Footer ─────────────────────────────────────────────
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\leftmark}
+\fancyhead[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% ── Lists ───────────────────────────────────────────────────────
+\usepackage{enumitem}
+\setlist[itemize]{noitemsep,topsep=2pt}
+\setlist[enumerate]{noitemsep,topsep=2pt}
+
+\begin{document}
+\title{Hệ thống Truy vấn và Hỏi đáp Sự kiện Video dựa trên Dữ liệu Đa phương thức}
+\author{12 \\ Trang Kỳ Anh (250101006), Lê Nguyễn Bảo Hân (250101017), Đặng Anh Đạt (250101009)
+  \\[4pt]
+  \normalsize GVHD: TS. Phạm Đỗ Kim Chi \\ Đại học Công Nghệ Thông Tin — ĐHQG TP.HCM
+}
+\date{}
+\maketitle
+\begin{abstract}
+Bài toán Visual Question Answering (VQA) trên kho video quy mô lớn đòi hỏi hệ thống vừa truy xuất đúng khoảnh khắc (moment) trong hàng trăm nghìn keyframe, vừa hiểu nội dung trực quan để trả lời câu hỏi. Báo cáo trình bày hệ thống VQA đa phương thức end-to-end cho cuộc thi AI Challenge 2025, xây dựng trên cách tiếp cận frame-level: tách video thành keyframe rồi kết hợp biểu diễn thị giác (SigLIP2, 768 chiều), văn bản trong ảnh (OCR), và nhãn đối tượng (object detection) để tạo chỉ mục đa tín hiệu. Pipeline truy vấn lai kết hợp dense retrieval và BM25 tự cài đặt qua Reciprocal Rank Fusion, bổ sung khớp chuỗi thời gian cho truy vấn đa sự kiện, và xếp hạng lại bằng Vision-Language Model. Hệ thống cung cấp hai chế độ hỏi đáp: thủ công (người dùng chọn bằng chứng) và tự động (ReAct agent trên LangGraph tự tìm kiếm, quan sát, và trả lời). Thực nghiệm trên benchmark silver pilot (20 QA, 416 qrels) cho thấy ReAct agent đạt Visual Context Recall 0,694, Faithfulness 0,929 — vượt trội so với pipeline cố định.
+
+\end{abstract}
+
+\section{Giới thiệu}
+
+\subsection{Bài toán}
+
+Visual Question Answering trên video (Video VQA) yêu cầu hệ thống thực hiện hai việc đồng thời: (1) tìm đúng khoảnh khắc chứa câu trả lời trong kho video lớn, và (2) trích xuất đáp án chính xác từ nội dung trực quan tại khoảnh khắc đó. Đây là bài toán kết hợp giữa truy xuất thông tin (information retrieval) và hiểu ngôn ngữ-thị giác (vision-language understanding).
+
+Cuộc thi AI Challenge (AIC) 2025 đặt bài toán trong bối cảnh thực tế: kho dữ liệu gồm 873 video tin tức và phóng sự Việt Nam, được biểu diễn qua 168.749 keyframe. Truy vấn hoàn toàn bằng tiếng Việt dạng đoạn văn mô tả cảnh hoặc câu hỏi, hệ thống phải trả về đúng keyframe và (nếu là VQA) trả lời câu hỏi. Ràng buộc thời gian thực (5 phút/truy vấn) loại bỏ các phương pháp đòi hỏi mã hóa video toàn bộ tại runtime.
+
+\subsection{Tại sao chọn frame-level?}
+
+Cách tiếp cận trực quan nhất — mã hóa toàn bộ video bằng video encoder rồi so khớp với text encoder — gặp ba hạn chế nghiêm trọng:
+
+\begin{itemize}
+  \item \textbf{Chi phí tính toán:} các video encoder SOTA (ViCLIP, InternVideo2 — 1.8B–6B tham số) đòi hỏi hàng chục GPU A100, vượt xa ngân sách của nhóm nghiên cứu.
+  \item \textbf{Tín hiệu bị pha loãng:} video dài hàng phút nhưng moment chỉ vài giây; embedding toàn video trung bình hóa mất thông tin chi tiết.
+  \item \textbf{Lỗi cascade:} pipeline video-level phụ thuộc chuỗi hai mô hình (video retrieval → temporal grounding) — lỗi ở tầng đầu lan truyền không hồi phục.
+\end{itemize}
+
+
+Thay vào đó, chúng tôi \textbf{reformulate bài toán}: dùng shot boundary detection tách video thành keyframe, rồi xử lý như bài toán truy xuất ảnh đa phương thức. Mỗi keyframe được bổ sung metadata giàu (OCR, objects, timestamp) để bù đắp cho việc mất ngữ cảnh thời gian. Cách tiếp cận này tận dụng hệ sinh thái mô hình ảnh phong phú (CLIP, SigLIP2) với chi phí thấp hơn nhiều lần.
+
+\subsection{Đóng góp}
+
+\begin{enumerate}
+  \item \textbf{Pipeline truy vấn lai end-to-end} kết hợp dense retrieval (SigLIP2) và BM25 tự cài đặt qua RRF tự cài đặt, tối ưu cho nội dung đa phương thức tiếng Việt.
+  \item \textbf{Module khớp chuỗi thời gian} (temporal chain matching) cho phép truy vấn đa sự kiện trên biểu diễn frame rời rạc.
+  \item \textbf{Hệ thống VQA hai chế độ:} pipeline one-shot (manual) và ReAct agent (agentic) dùng chung core retrieval, với guard node đảm bảo evidence-based answering.
+\end{enumerate}
+
+
+\section{Tập dữ liệu}
+
+\subsection{Nguồn dữ liệu}
+
+Tập dữ liệu do Ban Tổ chức AIC 2025 cung cấp, gồm video tin tức và phóng sự từ các đài truyền hình Việt Nam (HTV, VTV, v.v.), thu thập từ YouTube. Dữ liệu chia thành 10 batch (L21–L30), tổng cộng 873 video.
+
+\subsection{Cấu trúc thư mục}
+
+Dữ liệu được tổ chức theo cấu trúc sau:
+
+\begin{lstlisting}[]
+data/
+├── Videos/                    # Video gốc (.mp4)
+│   ├── L21_V001.mp4
+│   ├── L21_V002.mp4
+│   └── ...
+├── Keyframes/                 # Keyframe trích xuất từ video
+│   ├── L21_V001/
+│   │   ├── 000.jpg
+│   │   ├── 001.jpg
+│   │   └── ...
+│   ├── L21_V002/
+│   └── ...
+├── Objects/                   # Kết quả phát hiện vật thể (JSON)
+│   ├── L21_V001/
+│   │   ├── 000.json
+│   │   ├── 001.json
+│   │   └── ...
+│   └── ...
+├── CLIP-features/             # Embedding CLIP ViT-B-32 (npy)
+│   └── features_L21.npy      # Vector features theo thứ tự keyframe
+├── Metadata/                  # Metadata video từ YouTube (JSON)
+│   ├── L21_V001.json
+│   └── ...
+└── map-keyframes/             # Ánh xạ keyframe ↔ vị trí trong video (CSV)
+    ├── L21_V001.csv           # Cột: n, frame_idx, pts_time, fps
+    └── ...
+\end{lstlisting}
+
+
+\subsection{Mô tả chi tiết từng thành phần}
+
+\textbf{Videos:} File video gốc định dạng MP4. Mỗi video có thể dài từ vài chục giây đến hàng chục phút, nội dung đa dạng: bản tin thời sự, phóng sự, quảng cáo, gameshow, hướng dẫn nấu ăn, v.v.
+
+\textbf{Keyframes:} Ảnh JPEG trích xuất từ video tại các điểm chuyển cảnh (scene change). Mỗi keyframe lưu trong thư mục tương ứng tên video (ví dụ: \texttt{L21\_V001/042.jpg} là keyframe thứ 42 của video \texttt{L21\_V001.mp4}). Tên file là chỉ số tăng dần, vị trí thời gian chính xác xem trong file map-keyframes tương ứng.
+
+\textbf{Objects:} Kết quả phát hiện vật thể do BTC cung cấp, sử dụng mô hình \textbf{Faster RCNN pretrained trên OpenImagesV4} (qua TensorFlow Hub). Mỗi keyframe có file JSON tương ứng chứa danh sách object labels, bounding boxes, và confidence scores. Nhãn gốc từ OpenImagesV4 (\textasciitilde{}600 lớp) được chuẩn hóa về \textbf{80 lớp COCO-style} trong quá trình tiền xử lý trước khi nạp vào index.
+
+\textbf{CLIP features:} Embedding từ mô hình \textbf{CLIP ViT-B-32} cho tất cả keyframe, lưu thành file \texttt{.npy} duy nhất cho mỗi batch. Thứ tự vector tương ứng chỉ số keyframe tăng dần. \textit{Trong hệ thống của chúng tôi, chúng tôi không sử dụng CLIP features này mà thay bằng SigLIP2 (xem mục 2.4).}
+
+\textbf{Metadata:} Thông tin YouTube của video gốc (tiêu đề, mô tả, tags, ngày đăng, kênh). Mỗi video một file JSON. Một số video có thể không có metadata.
+
+\textbf{Map-keyframes:} File CSV ánh xạ mỗi keyframe đến vị trí chính xác trong video. Mỗi dòng gồm:
+
+\begin{itemize}
+  \item \texttt{n}: chỉ số keyframe (tương ứng tên file ảnh)
+  \item \texttt{frame\_idx}: chỉ số frame trong video
+  \item \texttt{pts\_time}: thời điểm hiển thị (giây), dùng để xác định vị trí thời gian
+  \item \texttt{fps}: tốc độ khung hình của video
+\end{itemize}
+
+
+\subsection{Trích xuất keyframe và xử lý}
+
+\subsubsection{Shot Boundary Detection}
+
+Keyframe được trích xuất bằng \textbf{TransNetV2} — mạng neural chuyên phát hiện điểm chuyển cảnh (shot boundary detection) trong video. TransNetV2 phân tích từng frame liên tiếp, gán xác suất là điểm cắt cảnh; khi xác suất vượt ngưỡng, frame đó được đánh dấu là ranh giới giữa hai cảnh (shot). Từ mỗi shot, keyframe đại diện được chọn.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{transnetv2.png}
+\caption{TransNetV2 — Shot boundary detection}
+\end{figure}
+
+
+\subsubsection{Lọc frame nhiễu}
+
+Keyframe trích xuất tự động thường chứa frame trắng hoặc đen tại điểm chuyển cảnh. Chúng tôi lọc bằng thống kê pixel trên ảnh thu nhỏ $16 \times 16$:
+
+$$\text{Loại bỏ nếu: } (\mu > 220 \wedge \sigma < 30) \vee (\mu < 15 \wedge \sigma < 10)$$
+
+với $\mu$ là giá trị trung bình pixel và $\sigma$ là độ lệch chuẩn. Ngoài ra, ảnh có dung lượng > 60KB được bỏ qua kiểm tra (hầu chắc không phải frame trắng/đen).
+
+\subsubsection{Mã hóa lại bằng SigLIP2}
+
+BTC cung cấp CLIP ViT-B-32 features sẵn, tuy nhiên chúng tôi \textbf{mã hóa lại toàn bộ keyframe} bằng \textbf{SigLIP2} (\texttt{google/siglip2-base-patch16-512}) vì:
+
+\begin{itemize}
+  \item SigLIP2 hỗ trợ đa ngôn ngữ tốt hơn CLIP gốc (quan trọng cho truy vấn tiếng Việt)
+  \item Vector 768 chiều (so với 512 của CLIP ViT-B-32) biểu diễn phong phú hơn
+  \item Kiến trúc NaViT xử lý nhiều độ phân giải đầu vào (512×512 mặc định), giữ chi tiết ảnh tốt hơn
+\end{itemize}
+
+
+\subsubsection{Xử lý OCR}
+
+Văn bản OCR được trích xuất bằng \textbf{Florence-2} (pre-computed). Ký tự phân tách \texttt{<sep>} được thay bằng khoảng trắng, chuỗi được cắt tối đa 4096 ký tự trước khi lưu vào chỉ mục.
+
+\subsubsection{Xử lý Objects}
+
+Nhãn vật thể từ Faster R-CNN/OpenImagesV4 được giới hạn tối đa \textbf{20 object/keyframe}. Toàn bộ tập nhãn duy nhất được ghi ra \texttt{object\_classes.json} phục vụ cho query enhancement.
+
+\subsection{Thống kê tập dữ liệu}
+
+\begin{center}
+\begin{tabular}{l l}
+\toprule
+Thông số & Giá trị \\
+\midrule
+Tổng số video & 873 \\
+Tổng số keyframe (sau lọc) & 168.749 \\
+Số batch & 10 (L21–L30) \\
+Embedding dimension & 768 (SigLIP2) \\
+Số lớp object duy nhất & 601 \\
+Tỉ lệ keyframe có OCR & 72,4\% \\
+Số keyframe bị lọc (trắng/đen) & 1.247 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\section{Nghiên cứu liên quan}
+
+\subsection{Biểu diễn đa phương thức}
+
+Contrastive learning đã tạo bước đột phá trong việc xây dựng không gian embedding chung cho text và ảnh. \textbf{CLIP} [1] huấn luyện cặp text-image encoder trên 400 triệu cặp ảnh-caption, cho phép so khớp trực tiếp text query với ảnh qua cosine similarity. Tuy nhiên, CLIP sử dụng hàm mất mát softmax đòi hỏi batch size rất lớn (32.768+) để hội tụ, và chỉ hỗ trợ phân giải cố định 224×224 — không phù hợp khi keyframe chứa chữ nhỏ cần nhận diện. \textbf{SigLIP} [2] thay thế softmax bằng sigmoid pairwise loss, loại bỏ hoàn toàn yêu cầu batch size lớn trong khi duy trì chất lượng embedding tương đương. \textbf{SigLIP2} [3] mở rộng thêm hai cải tiến quan trọng: (1) kiến trúc \textbf{NaViT} (Native Resolution ViT) [15] cho phép xử lý ảnh ở nhiều tỉ lệ và phân giải khác nhau không cần resize — bảo toàn chi tiết text trong keyframe; (2) huấn luyện đa ngôn ngữ mở rộng, cải thiện đáng kể khả năng cross-lingual retrieval.
+
+\begin{center}
+\small
+\begin{tabular}{l l l l l l}
+\toprule
+Mô hình & Hàm mất mát & Chiều & Phân giải & Đa ngôn ngữ & Yêu cầu batch \\
+\midrule
+CLIP ViT-B-32 [1] & Softmax contrastive & 512 & 224 cố định & Yếu & 32K+ \\
+SigLIP ViT-B-16 [2] & Sigmoid pairwise & 768 & 384 cố định & Một phần & Bất kỳ \\
+SigLIP2 base-patch16-512 [3] & Sigmoid pairwise & 768 & 512 NaViT & Mạnh & Bất kỳ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+Chúng tôi chọn \textbf{SigLIP2 base-patch16-512} vì ba lý do: (a) phân giải 512px bảo toàn chi tiết OCR trên biển hiệu và subtitle trong video Việt Nam — CLIP 224px thường mất hoàn toàn thông tin text; (b) hỗ trợ đa ngôn ngữ cho phép encode truy vấn tiếng Việt dịch sang tiếng Anh mà vẫn khớp tốt với ảnh chứa text Việt; (c) sigmoid loss cho phép fine-tune với batch nhỏ trên GPU đơn nếu cần domain adaptation.
+
+\subsection{Truy vấn thưa và lai}
+
+\textbf{BM25} [4] là baseline mạnh cho truy vấn từ khóa chính xác — mã số, tên riêng, text literal — nơi dense retrieval thường gặp vocabulary mismatch. Trong hệ thống video, text không đến từ tài liệu truyền thống mà từ \textbf{OCR text trích xuất trên keyframe} (biển hiệu, phụ đề, chữ trên màn hình) — nguồn tín hiệu duy nhất mà dense embedding thường bỏ sót khi text nhỏ hoặc bị che một phần. Chúng tôi xây BM25 inverted index in-memory tại startup từ toàn bộ OCR text (Florence-2 [16] trích xuất offline), tokenizer xử lý tiếng Việt: NFC normalize → lowercase → strip dấu thanh → tách từ bằng regex \texttt{\textbackslash{}w+}. \textbf{Reciprocal Rank Fusion (RRF)} [5] hợp nhất kết quả từ nhiều hệ thống (dense + BM25 trên OCR + variant queries) mà không cần chuẩn hóa điểm, chỉ dựa trên thứ hạng. Nhiều nghiên cứu chỉ ra hybrid retrieval vượt trội cả hai phương pháp đơn lẻ [6].
+
+\subsection{Temporal Search trên video}
+
+\textbf{Video Corpus Moment Retrieval (VCMR)} [7] mở rộng bài toán truy xuất từ single-video sang toàn bộ corpus. Bài toán cốt lõi: cho một truy vấn ngôn ngữ tự nhiên, tìm đoạn video (moment) phù hợp nhất trong toàn bộ corpus — đòi hỏi cả video-level retrieval lẫn temporal grounding.
+
+\subsubsection{Pipeline truyền thống vs. Cách tiếp cận frame-level}
+
+Hầu hết phương pháp VCMR tuân theo pipeline hai giai đoạn:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_1.png}
+\caption{Hình 2a: So sánh pipeline VCMR truyền thống (video-level, cần encoder nặng tại query time) với cách tiếp cận frame-level (keyframe đã index sẵn, chỉ cần encode query + tra cứu).}
+\label{fig:diagram_1}
+\end{figure}
+
+
+\textbf{Giai đoạn 1 — Video Retrieval:} Chọn video ứng viên chứa nội dung liên quan. Phương pháp truyền thống cần video encoder (S3D, SlowFast, CLIP) chạy online trên mỗi video ứng viên — chi phí tuyến tính với corpus size. Cách tiếp cận frame-level tránh bước này hoàn toàn: encode toàn bộ keyframe offline, query time chỉ tra cứu index.
+
+\textbf{Giai đoạn 2 — Temporal Grounding:} Xác định vị trí thời gian trong video. \textbf{Moment-DETR} [8] dùng transformer decoder dự đoán trực tiếp cặp (start, end) của moment. \textbf{UniVTG} [9] thống nhất moment retrieval, highlight detection, và video summarization trong một kiến trúc duy nhất, đạt SOTA trên QVHighlights và Charades-STA. Cả hai đều là \textbf{learned temporal models} — cần dữ liệu huấn luyện video-text paired. Cách tiếp cận frame-level thay thế bằng \textbf{post-hoc chain matching}: sắp xếp keyframe theo timestamps, tìm chuỗi thỏa mãn thứ tự thời gian, \textbf{không cần huấn luyện} (zero-shot).
+
+\noindent
+{\small
+\begin{tabularx}{\textwidth}{l Y l l l l}
+\toprule
+Phương pháp & Cách tiếp cận & Video encoder & Frame-level? & Đa sự kiện & Chi phí tính toán \\
+\midrule
+TVR [7] & Hai giai đoạn: video ret. + subtitle grounding & Pretrained S3D & Không & Không & Cao (video encoding) \\
+Moment-DETR [8] & Transformer decoder, dự đoán span & SlowFast / CLIP & Không & Không & Cao \\
+UniVTG [9] & Kiến trúc thống nhất multi-task & CLIP ViT-B & Không & Hạn chế & Cao \\
+\textbf{Ours} & Greedy chain matching trên keyframe rời rạc & SigLIP2 (ảnh) & \textbf{Có} & \textbf{Có (N events)} & \textbf{Thấp} \\
+\bottomrule
+\end{tabularx}
+}
+
+
+\subsubsection{Trade-off cốt lõi}
+
+Insight chính: đánh đổi \textbf{độ chính xác thời gian liên tục} (continuous temporal granularity) để lấy \textbf{chi phí tính toán thấp hơn nhiều lần} và khả năng \textbf{đa sự kiện native}. Cụ thể:
+
+\begin{itemize}
+  \item \textbf{Mất:} Không thể xác định start/end time chính xác đến giây — chỉ đến cấp keyframe (\textasciitilde{}1–3s/shot tùy tần suất shot boundary).
+  \item \textbf{Được:} (1) Không cần video encoder nặng online (ViCLIP 1.8B, InternVideo2 6B → chỉ SigLIP2 text encode \textasciitilde{}50ms); (2) Zero-shot, không cần dữ liệu huấn luyện temporal; (3) Hỗ trợ native truy vấn đa sự kiện ("đầu tiên A, sau đó B, cuối cùng C") — tính năng mà hầu hết VCMR chỉ xử lý single-moment.
+\end{itemize}
+
+
+Trade-off này chấp nhận được trong bối cảnh cuộc thi: câu trả lời yêu cầu keyframe evidence, không yêu cầu timestamp chính xác. Chi tiết thuật toán chain matching trình bày ở Mục 5.4.
+
+\subsection{Xếp hạng lại đa phương thức}
+
+Cross-encoder reranking [10] cải thiện precision bằng cách đánh giá cặp (query, document) thay vì so khớp embedding độc lập. Trong bối cảnh multimodal, có hai paradigm chính: \textbf{pointwise scoring} — VLM chấm điểm từng ứng viên độc lập, nhanh nhưng không so sánh trực tiếp — và \textbf{listwise reranking} — gửi tập ảnh ứng viên cùng query cho VLM và yêu cầu xếp hạng, chậm hơn nhưng VLM nhìn thấy tất cả ứng viên cùng lúc. Chúng tôi áp dụng listwise làm mặc định vì chất lượng ranking cao hơn trên benchmark, với pointwise làm fallback khi timeout. \textbf{Florence-2} [16] được sử dụng cho OCR extraction offline, cung cấp text context bổ sung cho cả reranking và VQA.
+
+\subsection{Agent cho VQA}
+
+\textbf{ReAct} [11] kết hợp reasoning và acting trong vòng lặp Thought → Action → Observation, cho phép LLM sử dụng công cụ bên ngoài. Trước đó, \textbf{Toolformer} (Schick et al., 2023) chứng minh LLM có thể tự học cách sử dụng tool, nhưng thiếu cơ chế kiểm soát luồng phức tạp. \textbf{LangGraph} [12] cung cấp framework xây dựng agent dạng đồ thị trạng thái (state graph), cho phép kiểm soát budget, routing có điều kiện, và xử lý timeout — phù hợp cho VQA nơi agent cần giới hạn số lần gọi VLM.
+
+Đóng góp thiết kế chính của hệ thống là \textbf{verify-then-answer pattern}: guard node bắt buộc agent phải \texttt{look} (quan sát ảnh qua VLM [17]) mọi evidence trước khi trả lời — frame chưa xem bị demote thành \texttt{uncertain}. Mô hình này khác với ReAct chuẩn (không ràng buộc evidence), giảm đáng kể hallucination trong thực nghiệm (Faithfulness 0,929 vs 0,571 của pipeline cố định).
+
+\section{Kiến trúc hệ thống}
+
+Hệ thống được tổ chức theo kiến trúc \textbf{5 tầng}, tuân thủ nguyên tắc \textbf{offline nặng, online nhẹ}: parse, encode, index chạy batch một lần; online chỉ encode truy vấn, tra cứu, rerank, và sinh câu trả lời.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_2.png}
+\caption{Hình 1: Kiến trúc 5 tầng. Tầng 1–2 chạy offline một lần; Tầng 3–5 xử lý online mỗi truy vấn.}
+\label{fig:diagram_2}
+\end{figure}
+
+
+\subsubsection{Nguyên tắc thiết kế: offline nặng, online nhẹ}
+
+Toàn bộ chi phí tính toán lớn — encode 168.749 keyframe bằng SigLIP2, trích xuất OCR bằng Florence-2 [16], nhận diện object bằng Faster RCNN/OpenImagesV4 (do BTC cung cấp), xây BM25 inverted index — thực hiện \textbf{offline một lần} (\textasciitilde{}4 giờ trên GPU đơn). Online chỉ cần encode text query (<50ms), tra cứu HNSW (<500ms p95), và gọi VLM khi cần rerank/VQA. Kết quả: hệ thống có thể phục vụ truy vấn trên máy không có GPU nếu dùng embedding API cho query, vì retrieval thuần chỉ là vector search trên index đã tính sẵn.
+
+\subsubsection{Mô tả chi tiết từng tầng}
+
+\textbf{Tầng 1 — Dữ liệu \& Xử lý (Offline):} TransNetV2 [14] phát hiện shot boundary, tạo keyframe đại diện cho mỗi shot. Keyframe qua bộ lọc blank frame (loại ảnh trắng/đen chuyển cảnh), sau đó được encode bằng SigLIP2 thành vector 768 chiều. OCR text (Florence-2 [16]) và object labels (Faster RCNN/OpenImagesV4, chuẩn hóa 80 lớp COCO-style) được trích xuất sẵn và lưu cùng vector dưới dạng pickle. Metadata thời gian (pts\_time, fps, frame\_idx) đọc từ CSV map-keyframes do BTC cung cấp.
+
+\textbf{Tầng 2 — Lưu trữ \& Chỉ mục:} Vector được nạp vào \textbf{Milvus} [18] với index \textbf{HNSW} [19] (M=32, efConstruction=256, metric COSINE) cho trường \texttt{text\_vector} 768 chiều. BM25 inverted index xây in-memory tại startup từ toàn bộ OCR text trong Milvus — tokenizer xử lý tiếng Việt (NFC normalize → lowercase → strip dấu thanh → tách từ bằng regex \texttt{\textbackslash{}w+}). Milvus chạy embedded mode (file-based, không cần server process riêng), giảm phức tạp triển khai.
+
+\textbf{Tầng 3 — Dịch vụ Thông minh (Online):} Gồm 5 module stateless, giao tiếp qua Python object in-process (không network hop): (1) Query Understanding — dịch VI→EN + regex extraction + LLM parse; (2) Hybrid Retrieval — dense HNSW + BM25 + RRF fusion; (3) Temporal Chain Matching — cho truy vấn đa sự kiện; (4) MLLM Rerank — VLM [17] listwise hoặc pointwise; (5) VQA/Agent — one-shot pipeline hoặc ReAct agent.
+
+\textbf{Tầng 4 — API:} FastAPI với ba endpoint chính: \texttt{/api/v1/search} (truy vấn keyframe), \texttt{/api/v1/vqa} (hỏi đáp one-shot), \texttt{/api/v1/chat} (agent ReAct qua SSE streaming). Mỗi request tạo một trace với các span có latency, lưu vào SQLite — phục vụ dashboard giám sát và phân tích hiệu năng.
+
+\textbf{Tầng 5 — Ứng dụng:} React frontend gồm search panel (kết quả grid), chat interface (SSE streaming hiển thị agent timeline), và dashboard (latency, QPS, error rate, cost).
+
+\begin{center}
+\begin{tabular}{l l l l}
+\toprule
+Tầng & Công nghệ chính & Latency đóng góp & Offline/Online \\
+\midrule
+1. Dữ liệu & TransNetV2, SigLIP2, Florence-2 & \textasciitilde{}4h (một lần) & Offline \\
+2. Lưu trữ & Milvus HNSW, BM25 in-memory & \textasciitilde{}30s build (startup) & Offline \\
+3. Truy vấn & SigLIP2 encode, Milvus search, RRF & 114ms p50 (retrieval) & Online \\
+4. API & FastAPI, SQLite traces & <5ms overhead & Online \\
+5. Ứng dụng & React, SSE & Client-side & Online \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\section{Phương pháp}
+
+\subsection{Ingestion (Offline)}
+
+Toàn bộ keyframe được xử lý offline và nạp vào chỉ mục. Pipeline ingestion:
+
+\begin{enumerate}
+  \item \textbf{Load features:} Đọc file pickle chứa pre-computed vectors (SigLIP2 768-d), OCR text (Florence-2 [16]), và object labels (Faster RCNN/OpenImagesV4, chuẩn hóa 80 lớp).
+  \item \textbf{Load map-keyframes:} Đọc CSV ánh xạ \texttt{(n, frame\_idx, pts\_time, fps)} cho mỗi keyframe.
+  \item \textbf{Lọc frame trắng/đen:} Downsample ảnh về 16×16, tính $\mu$ (mean) và $\sigma$ (std) pixel. Frame bị loại nếu: $(\mu > 220 \wedge \sigma < 30)$ (trắng chuyển cảnh) hoặc $(\mu < 15 \wedge \sigma < 10)$ (đen chuyển cảnh). File > 60KB được bỏ qua kiểm tra vì gần chắc chắn không phải blank frame.
+  \item \textbf{Xử lý OCR:} Thay \texttt{<sep>} bằng khoảng trắng, cắt 4096 ký tự.
+  \item \textbf{Insert Milvus:} Batch 1000 dòng, tạo HNSW index (M=32, efConstruction=256, metric=COSINE) cho vector 768-d.
+  \item \textbf{Build BM25 index:} Tại startup, đọc toàn bộ OCR từ Milvus, tokenize (NFC normalize → lowercase → strip dấu thanh → regex \texttt{\textbackslash{}w+}), xây inverted index in-memory.
+\end{enumerate}
+
+
+Schema Milvus (\texttt{aic25\_keyframes}):
+
+\begin{center}
+\begin{tabular}{l l l}
+\toprule
+Trường & Kiểu & Mô tả \\
+\midrule
+\texttt{id} & VARCHAR(32) & Khóa chính \texttt{L\{batch\}\_V\{video\}/\{idx:03d\}} \\
+\texttt{text\_vector} & FLOAT\_VECTOR(768) & Embedding SigLIP2 \\
+\texttt{ocr} & VARCHAR(4096) & Văn bản OCR (Florence-2) \\
+\texttt{objects} & ARRAY<VARCHAR> & Nhãn object, tối đa 20 \\
+\texttt{video\_name} & VARCHAR(16) & Định danh video \\
+\texttt{keyframe\_idx} & INT32 & Chỉ số keyframe \\
+\texttt{frame\_idx} & INT64 & Chỉ số frame trong video \\
+\texttt{pts\_time} & FLOAT & Thời điểm trong video (giây) \\
+\texttt{fps} & FLOAT & Tốc độ khung hình \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\subsection{Hiểu truy vấn (Query Understanding)}
+
+Truy vấn đầu vào bằng tiếng Việt trải qua ba bước xử lý song song rồi hợp nhất:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_3.png}
+\caption{Hình 2: Pipeline hiểu truy vấn. Regex chạy song song với LLM parse; khi LLM thất bại, fallback về dịch thuần.}
+\label{fig:diagram_3}
+\end{figure}
+
+
+\textbf{Regex Extraction} trích xuất tức thì (không cần LLM):
+
+\begin{itemize}
+  \item Chuỗi trong dấu ngoặc kép, từ viết HOA ≥ 2 ký tự, số ≥ 2 chữ số → OCR candidates
+  \item Ánh xạ 25 từ Việt sang nhãn object (COCO-style, 80 lớp đã chuẩn hóa từ OpenImagesV4): "người"→person, "xe hơi"/"ô tô"→car, "xe máy"→motorcycle, v.v. → Object candidates
+\end{itemize}
+
+
+\textbf{LLM Parse} (Qwen3.8-27b, temperature=0) phân tích truy vấn thành JSON:
+
+\begin{itemize}
+  \item \texttt{classification}: \texttt{"single\_scene"} (một cảnh) hoặc \texttt{"multi\_event"} (nhiều sự kiện → kích hoạt temporal search)
+  \item \texttt{events[]}: mỗi sự kiện có \texttt{text\_en} (mô tả cảnh tiếng Anh), \texttt{ocr}, \texttt{objects}, \texttt{variants} (1–3 cách diễn đạt thay thế)
+  \item \texttt{temporal\_relations[]}: quan hệ thời gian giữa events
+\end{itemize}
+
+
+\textbf{Fallback:} Khi LLM không khả dụng hoặc parse lỗi → dịch toàn bộ query sang tiếng Anh, tạo single-event ParsedQuery. Hệ thống vẫn hoạt động (mất multi-event classification và variants).
+
+\subsection{Truy vấn lai (Hybrid Retrieval)}
+
+Thiết kế tuân thủ nguyên tắc \textbf{recall trước, precision sau}: tầng 1 tập trung không bỏ sót ứng viên đúng (top-200), tầng 2 (rerank) mới tối ưu vị trí ranking (top-10).
+
+\subsubsection{Dense Retrieval}
+
+\texttt{text\_en} của mỗi event được encode bằng SigLIP2 thành vector 768-d, tìm top-$N$ nearest neighbors trong Milvus:
+
+$$\text{sim}(q, f) = \cos(\mathbf{v}_q, \mathbf{v}_f) = \frac{\mathbf{v}_q \cdot \mathbf{v}_f}{||\mathbf{v}_q|| \cdot ||\mathbf{v}_f||}$$
+
+Tham số search: HNSW \texttt{ef = 512}, \texttt{metric = COSINE}, \texttt{top\_k = 200}. Khi có variant queries, mỗi variant được encode riêng và tạo thêm danh sách kết quả.
+
+\subsubsection{BM25 (tự cài đặt)}
+
+BM25 hoạt động trên trường OCR, truy vấn text literal (tên đường, biển số, tiêu đề, v.v.):
+
+$$\text{BM25}(q, d) = \sum_{t \in q} \text{IDF}(t) \cdot \frac{tf_{t,d} \cdot (k_1 + 1)}{tf_{t,d} + k_1 \cdot (1 - b + b \cdot \frac{|d|}{\text{avgdl}})}$$
+
+$$\text{IDF}(t) = \log\left(\frac{N - df_t + 0.5}{df_t + 0.5} + 1\right)$$
+
+Tham số: $k_1 = 1.5$, $b = 0.75$. Tokenizer xử lý tiếng Việt: NFC normalize → lowercase → strip dấu thanh (NFD + loại combining marks) → tách từ bằng \texttt{\textbackslash{}w+}.
+
+\textbf{BM25 cần thiết vì:} dense retrieval mạnh về ngữ nghĩa nhưng không phân biệt được chuỗi text cụ thể. Ví dụ: "biển số 51A-12345" — SigLIP2 embedding không mã hóa chuỗi ký tự chính xác, trong khi BM25 match trực tiếp trong OCR.
+
+\subsubsection{Reciprocal Rank Fusion — RRF (tự cài đặt)}
+
+Kết quả từ dense, BM25, và variants được hợp nhất:
+
+$$\text{RRF}(d) = \sum_{l \in \mathcal{L}} \frac{1}{k + \text{rank}_l(d) + 1}$$
+
+với $\mathcal{L}$ là tập danh sách kết quả (dense, BM25, variant queries, upvote signals), $k = 60$.
+
+RRF không cần chuẩn hóa điểm — chỉ dựa trên thứ hạng — nên robust với sự khác biệt phân phối điểm giữa dense (cosine ∈ [0,1]) và BM25 (unbounded).
+
+\subsubsection{Metadata Soft Boost}
+
+Tăng cường nhẹ dựa trên Jaccard similarity giữa query terms và metadata (OCR + objects):
+
+$$\text{score}'(d) = \text{score}(d) \cdot (1 + \min(\alpha \cdot J(q, d), \beta))$$
+
+với $\alpha = 0.05$, $\beta = 0.1$. Boost có cận trên 10\% — đủ để phân biệt ứng viên gần điểm, không đủ để ghi đè tín hiệu semantic.
+
+\subsubsection{Sequence Diagram truy vấn}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_4.png}
+\caption{Hình 3: Sequence diagram truy vấn đơn. Dense và BM25 chạy song song; mọi bước là một span có latency.}
+\label{fig:diagram_4}
+\end{figure}
+
+
+\subsection{Khớp chuỗi thời gian (Temporal Chain Matching)}
+
+Khi query được phân loại \texttt{multi\_event} (ví dụ: "Đầu tiên thấy cảnh biển, sau đó người ta vào chợ"), hệ thống cần tìm chuỗi keyframe \textbf{cùng video} thỏa mãn thứ tự thời gian.
+
+\subsubsection{Vấn đề}
+
+Retrieval trên keyframe đơn lẻ không nắm bắt quan hệ thời gian. Mỗi event $E_i$ có tập ứng viên $C_i$ từ retrieval, nhưng cần tìm tổ hợp $(c_1, c_2, \ldots, c_n)$ sao cho: (a) tất cả thuộc cùng video, (b) timestamp tăng dần: $t(c_1) < t(c_2) < \ldots < t(c_n)$.
+
+\subsubsection{Thuật toán Greedy}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_5.png}
+\caption{Hình 4: Thuật toán Greedy Temporal Chain Matching.}
+\label{fig:diagram_5}
+\end{figure}
+
+
+\textbf{Chain scoring:}
+
+$$\text{chain\_score} = \underbrace{\frac{1}{|F|} \sum_{f \in F} s_f}_{\text{mean relevance}} \times \underbrace{\frac{|F|}{n}}_{\text{coverage ratio}}$$
+
+Chain hợp lệ khi phủ ít nhất $\max(2, n-1)$ events — cho phép bỏ sót tối đa 1 event. Chains được loại trùng theo answer-event keyframe (giữ chain score cao nhất).
+
+\subsubsection{Pseudocode}
+
+\begin{lstlisting}[]
+Algorithm 1: Greedy Temporal Chain Matching
+─────────────────────────────────────────────
+Input:  Per-event candidate sets C₁..Cₙ (mỗi tập ≤ 200 ứng viên),
+        max_gap_s (giới hạn khoảng cách thời gian, tùy chọn)
+Output: Top-20 chains xếp hạng theo chain_score
+
+ 1. Nhóm tất cả ứng viên theo video_name
+ 2. Loại video có ứng viên cho < 2 events
+ 3. FOR mỗi video V:
+ 4.   FOR mỗi anchor a ∈ C₁[V][:50] (top-50 theo score):
+ 5.     chain ← [a];  prev_ts ← a.pts_time
+ 6.     FOR event i = 2..N:
+ 7.       best ← argmax{score(c)} với c ∈ Cᵢ[V]
+ 8.              sao cho c.pts_time > prev_ts
+ 9.              ∧ (max_gap_s = ∅ ∨ c.pts_time − prev_ts ≤ max_gap_s)
+10.       IF best tồn tại: chain.append(best); prev_ts ← best.pts_time
+11.     IF |chain| ≥ max(2, N−1): emit chain
+12. Score: chain_score = mean(scores) × coverage_ratio
+13. Loại trùng theo answer-event kf_id (giữ chain score cao nhất)
+14. RETURN top-20 chains
+\end{lstlisting}
+
+
+\subsubsection{Tham số \texttt{max\_gap\_s}}
+
+Tham số \texttt{max\_gap\_s} (mặc định: không giới hạn) ràng buộc khoảng cách thời gian tối đa giữa hai event liên tiếp trong chain. Khi được thiết lập (ví dụ: 120s), hệ thống chỉ chấp nhận chain mà mọi cặp event liền kề cách nhau ≤ 120 giây — ngăn chặn việc ghép hai cảnh ở đầu và cuối video dài thành chain giả. Hiện tại để mặc định vì video tin tức thường ngắn (2–5 phút), nhưng có thể cần thiết khi mở rộng sang video dài hơn.
+
+\subsubsection{Phân tích độ phức tạp}
+
+Gọi $V$ = số video có ứng viên cho ≥ 2 events, $A$ = giới hạn anchor (50), $E$ = số events, $K$ = ứng viên tối đa mỗi event (200). Trường hợp xấu nhất: $O(V \times A \times E \times K)$. Với giá trị điển hình ($V \approx 50$, $A = 50$, $E = 2\text{–}3$, $K = 200$), tổng so sánh khoảng 1,5 triệu — latency không đáng kể (<5ms, xác nhận từ traces thực tế). Bottleneck thực sự nằm ở retrieval per-event ($E$ lần gọi Milvus), không phải chain matching.
+
+\textbf{Biến thể Adaptive Tolerance:} Bổ sung early-stopping: nếu duyệt \texttt{tolerance\_threshold} (mặc định 3) ứng viên liên tiếp mà không cải thiện score → dừng sớm, giảm $K$ hiệu dụng. Tùy chọn dùng cosine similarity với query vector thay vì raw retrieval score — cho phép so sánh trực tiếp giữa ứng viên từ nhiều nguồn retrieval.
+
+\subsubsection{So sánh với VCMR end-to-end}
+
+\begin{center}
+\begin{tabular}{l l l}
+\toprule
+Khía cạnh & VCMR end-to-end [7][8][9] & Cách tiếp cận của chúng tôi \\
+\midrule
+Input & Raw video frames & Keyframe embeddings đã tính sẵn \\
+Mô hình temporal & Learned (transformer/decoder) & Greedy chain trên timestamps rời rạc \\
+Cần huấn luyện & Có (dữ liệu video-text paired) & Không (zero-shot) \\
+Độ chính xác thời gian & Liên tục (start/end times) & Rời rạc (keyframe timestamps) \\
+Chi phí query time & Nặng (video encoding) & Nhẹ (sort + filter, <5ms) \\
+Hỗ trợ đa sự kiện & Hạn chế (single moment/query) & Native ($N$ events, thứ tự thời gian) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+Hạn chế: thuật toán greedy có thể bỏ sót chain tối ưu khi event scores nhiễu — cụ thể khi event 1 không có ứng viên mạnh trong video đúng nhưng event 2 hoặc 3 có. Cải tiến tiềm năng: beam search thay greedy, hoặc learned scoring với gap penalty.
+
+\subsection{Xếp hạng lại (Reranking)}
+
+\subsubsection{MLLM Listwise Reranking (mặc định)}
+
+Lấy top-10 ứng viên sau fusion, gửi ảnh kèm query cho VLM (Qwen3.8-27b), yêu cầu trả về JSON array xếp hạng từ phù hợp nhất đến ít phù hợp nhất.
+
+\begin{itemize}
+  \item Ảnh resize \texttt{max\_side = 384px}, encode base64 JPEG
+  \item Timeout: 15.000ms
+  \item Fallback: nếu timeout hoặc parse lỗi → giữ nguyên thứ tự trước rerank
+\end{itemize}
+
+
+\textbf{Ưu điểm listwise:} VLM nhìn thấy tất cả ứng viên cùng lúc, so sánh trực tiếp thay vì chấm điểm độc lập → ranking chính xác hơn pointwise.
+
+\subsubsection{VLM Pointwise Scoring (phương pháp thay thế)}
+
+Gửi ảnh theo batch 4, yêu cầu VLM chấm điểm 0–10 cho mỗi ứng viên. Nhanh hơn listwise nhưng không so sánh trực tiếp giữa ứng viên.
+
+\subsection{Hỏi đáp trực quan (VQA)}
+
+\subsubsection{Pipeline One-shot}
+
+Sau khi có top evidence keyframe, hệ thống tạo prompt multimodal chứa cả ảnh lẫn OCR text:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_6.png}
+\caption{Hình 5: Pipeline VQA one-shot. OCR context chèn trực tiếp vào prompt bên cạnh ảnh.}
+\label{fig:diagram_6}
+\end{figure}
+
+
+Cấu trúc prompt VQA:
+
+\begin{lstlisting}[]
+Evidence frames:
+Image 1: keyframe L30_V078/031 (event E1) at 45.2s
+  Text visible in frame: Nhân bánh cuốn — Nạc dăm xay 200 gr
+Image 2: keyframe L30_V078/030 (event E1) at 43.1s
+  Text visible in frame: Công thức làm bánh cuốn
+
+Question: <câu hỏi gốc tiếng Việt>
+
+Instructions:
+- Answer based on what you can see AND the OCR text provided.
+- The 'Text visible in frame' lines contain OCR-extracted text.
+- If you cannot determine the answer, respond: KHONG_TRA_LOI_DUOC
+- Do NOT guess information not visible in the frames.
+\end{lstlisting}
+
+
+\textbf{OCR context chèn vào prompt} vì VLM ở độ phân giải thấp (768px) không đáng tin cậy khi đọc chữ Việt in nhỏ, chữ viết tay, hoặc chữ trên biển hiệu. OCR đã trích xuất offline bằng Florence-2 — chèn trực tiếp giúp VLM có tín hiệu text bổ sung.
+
+\subsection{Agent ReAct}
+
+Bên cạnh pipeline one-shot (cố định), hệ thống cung cấp chế độ \textbf{agentic} — ReAct agent tự động lập kế hoạch, tìm kiếm, quan sát, và trả lời.
+
+\subsubsection{Đồ thị trạng thái (LangGraph)}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_7.png}
+\caption{Hình 6: State diagram ReAct agent. Ba node: agent (suy luận LLM), tools (thực thi + budget), guard (xác nhận evidence).}
+\label{fig:diagram_7}
+\end{figure}
+
+
+\subsubsection{Bộ công cụ}
+
+\noindent
+\begin{tabularx}{\textwidth}{l l Y Y}
+\toprule
+Tool & Mode & Chức năng & Giới hạn \\
+\midrule
+\texttt{search} & Agentic & Encode text → dense search trong Milvus & Max 3 calls \\
+\texttt{search\_events} & Agentic & Multi-event retrieval + temporal matching & Max 3 calls \\
+\texttt{look} & Cả hai & Gửi ảnh keyframe cho VLM quan sát, đọc chữ & Max 5 calls, 4 frames/call \\
+\texttt{crop} & Cả hai & Cắt vùng ảnh, kiểm tra ở 1024px (chi tiết cao) & — \\
+\texttt{neighbors} & Cả hai & Lấy keyframe lân cận cùng video & 3 frames/hướng \\
+\texttt{read\_ocr} & Cả hai & Đọc OCR text từ Milvus (không gọi VLM, rất nhanh) & 20 kf\_ids/call \\
+\texttt{final\_answer} & Cả hai & Nộp đáp án kèm status + evidence & — \\
+\bottomrule
+\end{tabularx}
+
+
+\subsubsection{Hai chế độ vận hành}
+
+\noindent
+\begin{tabularx}{\textwidth}{l Y Y}
+\toprule
+ & \textbf{Manual} & \textbf{Agentic} \\
+\midrule
+\textbf{Endpoint} & \texttt{/api/v1/ask} & \texttt{/api/v1/chat} (SSE stream) \\
+\textbf{Tools} & 5 tools (không có search) & Đầy đủ 7 tools \\
+\textbf{Input} & Câu hỏi + kf\_ids (người dùng chọn) & Chỉ câu hỏi \\
+\textbf{Khi nào dùng} & Người dùng đã tìm được frame, cần đọc/trả lời & Truy vấn mở, hệ thống tự tìm \\
+\bottomrule
+\end{tabularx}
+
+
+\subsubsection{Guard Node}
+
+Trước khi trả đáp án, guard kiểm tra:
+
+\begin{enumerate}
+  \item Mọi evidence kf\_id phải khớp pattern \texttt{\textasciicircum{}L\textbackslash{}d+\_V\textbackslash{}d+/\textbackslash{}d\{3,\}\$}
+  \item Mọi evidence kf\_id phải đã được \texttt{look} (agent thực sự xem ảnh)
+  \item Vi phạm → demote status thành \texttt{"uncertain"}, đánh dấu \texttt{guard\_changed: true}
+\end{enumerate}
+
+
+Nguyên tắc: agent chỉ được trả lời dựa trên bằng chứng đã quan sát, không được bịa từ search results.
+
+\subsubsection{Kiểm soát ngân sách}
+
+\begin{center}
+\begin{tabular}{l l l}
+\toprule
+Tham số & Mặc định & Ý nghĩa \\
+\midrule
+\texttt{max\_search\_calls} & 3 & Số lần gọi search/search\_events \\
+\texttt{max\_look\_calls} & 5 & Số lần gọi look (VLM) \\
+\texttt{recursion\_limit} & 12 & \texttt{2 × max\_steps + 2}, giới hạn LangGraph \\
+\texttt{timeout\_s} & 60 & Timeout toàn bộ agent run \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+Khi vượt budget, tool trả lỗi thay vì thực thi → buộc agent kết luận với thông tin hiện có.
+
+\section{Thực nghiệm}
+
+\subsection{Tập đánh giá}
+
+Benchmark gồm \textbf{20 cặp QA} với \textbf{416 qrels} (116 positive grade ≥ 2, 271 negative grade = 0), sinh và kiểm chứng bằng MLLM (Qwen3.8-flash). Đây là nhãn silver, chưa được chuyên gia xác nhận. Quy trình:
+
+\begin{enumerate}
+  \item Trích mẫu keyframe, trích xuất visual facts bằng VLM
+  \item Sinh câu hỏi QA, phân loại theo 6 dạng
+  \item Xác minh: blind visual pass + question-aware comparison
+  \item Freeze thành benchmark cố định
+\end{enumerate}
+
+
+\begin{center}
+\begin{tabular}{l l l}
+\toprule
+Dạng câu hỏi & Số lượng & Ví dụ \\
+\midrule
+\texttt{visible\_action} & 4 & "Người phụ nữ đang làm gì?" \\
+\texttt{spatial\_count} & 4 & "Có bao nhiêu người trong khung hình?" \\
+\texttt{multi\_frame\_temporal} & 3 & "Sau khi A xảy ra, B là gì?" \\
+\texttt{unanswerable} & 3 & Câu hỏi không có đáp án trong corpus \\
+\texttt{object\_attribute} & 4 & "Màu áo của người đàn ông?" \\
+\texttt{ocr\_signage} & 2 & "Tên quán trên biển hiệu?" \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\subsubsection{Schema dữ liệu}
+
+Bộ eval pilot nằm ở \texttt{data/video\_rag\_eval/benchmark/v1/} (artifact cục bộ, không commit vào Git). Phiên bản hiện tại có 20 QA: 6 \texttt{dev}, 14 \texttt{test}, và 416 nhãn qrel. Đây là \textbf{silver/pseudo-ground-truth} do MLLM sinh và kiểm chứng, chưa phải nhãn chuyên gia.
+
+\subsubsection{Ground truth nằm ở đâu?}
+
+Benchmark \textbf{không có một file \texttt{ground\_truth.json} duy nhất}. Ground truth (chính xác hơn là \textit{silver reference labels}) được tách theo đơn vị cần chấm và nối bằng \texttt{query\_id}:
+
+\noindent
+\begin{tabularx}{\textwidth}{Y l Y}
+\toprule
+Phép chấm & File nhãn tham chiếu & Trường dùng làm ground truth \\
+\midrule
+Trả lời VQA & \texttt{answers.jsonl} & \texttt{reference\_answer}, \texttt{required\_claims}, \texttt{answerable} \\
+Bằng chứng thị giác và coverage & \texttt{evidence.jsonl} & \texttt{evidence\_sets[].frame\_ids}, \texttt{required\_all}, \texttt{crop\_paths} \\
+Truy hồi keyframe & \texttt{qrels.tsv} & \texttt{(query\_id, frame\_id, grade)}; chỉ frame đã được judge mới có dòng \\
+Truy hồi theo khoảng frame gốc & \texttt{accepted\_ranges.tsv} & Khoảng \texttt{[lo\_frame\_idx, hi\_frame\_idx]} suy ra từ qrels và map-keyframes, không phải nhãn độc lập \\
+\bottomrule
+\end{tabularx}
+
+
+\texttt{queries.jsonl} chứa câu hỏi, mô tả truy hồi và \texttt{split}, tức \textbf{đầu vào} để chấm; \texttt{splits.json} xác định video thuộc \texttt{dev}/\texttt{test}; \texttt{benchmark\_manifest.json} ghi phiên bản và hash của bộ nhãn đóng băng. Các file \texttt{runs/E*.jsonl} là \textbf{đầu ra hệ thống}, không phải ground truth. Với câu \texttt{answerable=false}, \texttt{reference\_answer} và \texttt{required\_claims} để trống; điểm \textit{negative rejection} kiểm tra hệ thống có từ chối trả lời đúng hay không.
+
+\subsubsection{Quy ước chung}
+
+\begin{itemize}
+  \item \texttt{query\_id} (ví dụ \texttt{Q0001}) là khóa nối giữa các file. Mỗi \texttt{queries.jsonl}, \texttt{answers.jsonl}, \texttt{evidence.jsonl} có đúng một dòng cho mỗi \texttt{query\_id}.
+  \item JSONL dùng UTF-8; mỗi dòng là một object JSON độc lập. TSV dùng tab làm dấu phân cách.
+  \item \texttt{frame\_id}/\texttt{kf\_id} có dạng \texttt{L22\_V019/054}: phần trước dấu \texttt{/} là \texttt{video\_id}, phần sau là chỉ số keyframe. \texttt{source\_frame\_id} và \texttt{frame\_ids} dùng cùng định dạng.
+  \item Các file nhãn đóng băng nằm trong \texttt{benchmark/v1/}; kết quả chạy mô hình nằm ở \texttt{data/video\_rag\_eval/runs/}, điểm chấm ở \texttt{data/video\_rag\_eval/eval/}.
+\end{itemize}
+
+
+\subsubsection{\texttt{queries.jsonl}}
+
+\noindent
+\begin{tabularx}{\textwidth}{l l Y}
+\toprule
+Trường & Kiểu & Ý nghĩa \\
+\midrule
+\texttt{query\_id} & string & Khóa QA, duy nhất. \\
+\texttt{description\_vi} & string & Mô tả cảnh để truy hồi; không chứa đáp án. \\
+\texttt{question\_vi} & string & Câu hỏi VQA bằng tiếng Việt. \\
+\texttt{question\_type} & string & Loại câu hỏi, ví dụ \texttt{visible\_action}, \texttt{ocr\_signage}, \texttt{unanswerable}. \\
+\texttt{answerable} & boolean & Có thể trả lời từ ảnh nguồn hay không. \\
+\texttt{split} & \texttt{dev} hoặc \texttt{test} & Tập đánh giá; tách theo video/nhóm video trùng lặp. \\
+\bottomrule
+\end{tabularx}
+
+
+\begin{lstlisting}[]
+{"query_id":"Q0001","description_vi":"Mô tả cảnh không tiết lộ đáp án","question_vi":"Người trong ảnh đang làm gì?","question_type":"visible_action","answerable":true,"split":"test"}
+\end{lstlisting}
+
+
+\subsubsection{\texttt{answers.jsonl}}
+
+\noindent
+\begin{tabularx}{\textwidth}{l l Y}
+\toprule
+Trường & Kiểu & Ý nghĩa \\
+\midrule
+\texttt{query\_id} & string & Nối với \texttt{queries.jsonl}. \\
+\texttt{reference\_answer} & string & Đáp án tham chiếu; với câu không trả lời được, xem thêm \texttt{answerable}. \\
+\texttt{required\_claims} & string[] & Các mệnh đề cần đúng trong câu trả lời. \\
+\texttt{answerable} & boolean & Cờ khả năng trả lời sau bước xác minh. \\
+\texttt{label\_status} & string & Trạng thái nhãn, hiện là \texttt{verified\_silver}. \\
+\bottomrule
+\end{tabularx}
+
+
+\subsubsection{\texttt{evidence.jsonl}}
+
+\noindent
+\begin{tabularx}{\textwidth}{l l Y}
+\toprule
+Trường & Kiểu & Ý nghĩa \\
+\midrule
+\texttt{query\_id} & string & Nối với câu hỏi và đáp án. \\
+\texttt{source\_video\_id} & string & Video nguồn của đề xuất QA. \\
+\texttt{source\_frame\_id} & string & Keyframe nguồn của đề xuất QA. \\
+\texttt{temporal\_relation} & string hoặc null & Quan hệ thời gian nếu QA cần nhiều frame; hiện có \texttt{ordered} hoặc \texttt{null}. \\
+\texttt{evidence\_sets} & object[] & Một hoặc nhiều tập ảnh đủ làm bằng chứng. \\
+\texttt{judge\_ids} & string[] & Các lượt judge đã xác minh nhãn. \\
+\bottomrule
+\end{tabularx}
+
+
+Mỗi phần tử \texttt{evidence\_sets} gồm \texttt{set\_id} (string), \texttt{frame\_ids} (string[]), \texttt{required\_all} (boolean) và \texttt{crop\_paths} (string[]). \texttt{required\_all=true} nghĩa là cần đủ các frame trong tập đó để kiểm chứng câu trả lời.
+
+\subsubsection{\texttt{qrels.tsv} và \texttt{accepted\_ranges.tsv}}
+
+\texttt{qrels.tsv} \textbf{không có header}. Bốn cột theo thứ tự: \texttt{query\_id}, \texttt{iteration} (luôn \texttt{0}), \texttt{frame\_id}, \texttt{grade}. \texttt{grade} là số nguyên 0–3; nhãn liên quan tích cực dùng ngưỡng \texttt{grade >= 2} theo cấu hình đánh giá.
+
+\begin{lstlisting}[]
+Q0001\t0\tL21_V001/203\t0
+\end{lstlisting}
+
+
+\texttt{accepted\_ranges.tsv} \textbf{có header}: \texttt{query\_id}, \texttt{video\_id}, \texttt{lo\_frame\_idx}, \texttt{hi\_frame\_idx}, \texttt{grade}, \texttt{source\_frame\_id}. Hai cột \texttt{lo\_frame\_idx} và \texttt{hi\_frame\_idx} là biên bao gồm của khoảng frame video gốc; hit chỉ khớp khi cùng video và \texttt{frame\_idx} nằm trong khoảng. Khoảng này dùng cho truy hồi/citation, không tự chứng minh nội dung ảnh.
+
+\subsubsection{Quy trình sinh benchmark tự động (MLLM-based)}
+
+Benchmark được sinh \textbf{hoàn toàn tự động} bằng MLLM, không cần người gán nhãn. Nhãn là \textbf{silver/pseudo-ground-truth} — do MLLM tạo và xác minh, không phải nhãn chuyên gia. Các nguyên tắc thiết kế:
+
+\begin{itemize}
+  \item \textbf{Một bộ câu hỏi chung}, nhiều bảng nhãn liên kết bởi \texttt{query\_id}: \texttt{queries.jsonl} + \texttt{qrels.tsv} + \texttt{answers.jsonl} + \texttt{evidence.jsonl}
+  \item \textbf{Đơn vị truy hồi là \texttt{frame\_id}}: không dùng shot/scene làm nhãn chính
+  \item \textbf{MLLM sinh + hai lượt judge xác minh}: cùng checkpoint với prompt độc lập; bất đồng → reject
+  \item \textbf{Chống trùng trước khi lấy mẫu}: xây nhóm near-duplicate, chọn frame đại diện, không xóa frame gốc khỏi kho
+  \item \textbf{Qrels đa nguồn}: pool từ SigLIP2 + object-based + random negatives, MLLM chấm từng frame blind (không thấy rank/score)
+\end{itemize}
+
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_8.png}
+\caption{Hình 7: Pipeline sinh benchmark tự động. MLLM sinh QA (P3), hai lượt judge dùng prompt độc lập để xác minh (P4); bất đồng dẫn đến quarantine.}
+\label{fig:diagram_8}
+\end{figure}
+
+
+\textbf{Thang nhãn qrels (TREC format):} \texttt{3} = bằng chứng trực tiếp, đáp án đọc/nhìn được; \texttt{2} = gần đủ, chi tiết quyết định chưa rõ; \texttt{1} = đúng bối cảnh, không tự trả lời được; \texttt{0} = đã judge, không liên quan. Không có dòng qrels = \textbf{chưa phán nhãn}, không tự động coi là 0.
+
+\subsubsection{Thống kê benchmark pilot}
+
+\begin{center}
+\begin{tabular}{l l}
+\toprule
+Chỉ số & Giá trị \\
+\midrule
+Video đã quét (pilot) & 128 / 873 \\
+Frame hợp lệ & 26.003 \\
+Nhóm near-duplicate & 25.874 \\
+Frame lấy mẫu & 120 \\
+Video có mẫu & 88 \\
+Proposal qua judge & 43 \\
+QA chấp nhận & 25 \\
+QA từ chối & 18 \\
+Benchmark đóng băng & 20 \\
+Candidate qrels đã chấm & 416 \\
+Candidate unjudged & 82 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\textbf{Lý do từ chối QA:}
+
+\begin{center}
+\begin{tabular}{l l}
+\toprule
+Lý do & Số lượng \\
+\midrule
+\texttt{ocr\_without\_crop} (OCR thiếu crop xác minh) & 8 \\
+\texttt{description\_grounded} (mô tả không bám ảnh) & 5 \\
+\texttt{reference\_answer\_mismatch} (đáp án không khớp) & 4 \\
+\texttt{answerability\_mismatch} (bất đồng về khả năng trả lời) & 2 \\
+\texttt{leaks\_answer} (description lộ đáp án) & 2 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\textbf{Dòng dữ liệu đánh giá:}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.78\textwidth,keepaspectratio]{diagram_9.png}
+\caption{Hình 8: Các nhãn silver nối bằng \texttt{query\_id}: đáp án tham chiếu, evidence frame và qrels. Qrels frame-level cùng accepted ranges phục vụ chấm truy hồi; đáp án và evidence phục vụ chấm VQA.}
+\label{fig:diagram_9}
+\end{figure}
+
+
+\textbf{Chi phí sinh benchmark:} \textasciitilde{}\$0,51 USD (model Qwen3.8-flash qua OpenRouter), bao gồm fact extraction, QA generation, verification, qrels judging.
+
+\subsection{Metric đánh giá}
+
+\subsubsection{Bốn metric chính}
+
+\textbf{Visual Context Recall} — Tỷ lệ claim của đáp án chuẩn được các frame context hỗ trợ:
+
+$$\mathrm{VisualContextRecall}(q) = \frac{\# \text{ claims được frame context hỗ trợ}}{\# \text{ claims hợp lệ}}$$
+
+Chấm bằng MLLM visual claim judge: judge nhìn ảnh context thực nhận và kiểm tra từng claim. Với claim cần nhiều frame, chỉ \texttt{supported=1} nếu tập context đủ bằng chứng. Câu unanswerable không tính vào trung bình (chuyển sang Negative Rejection).
+
+\textbf{Context Precision} — Average precision theo thứ hạng frame trong context:
+
+$$\mathrm{ContextPrecision@K} = \frac{\sum_{i=1}^{K} P@i \cdot rel_i}{\max(1, \sum_{i=1}^{K} rel_i)}, \qquad P@i = \frac{\sum_{j=1}^{i} rel_j}{i}$$
+
+Với $rel_i = 1$ nếu frame được MLLM judge xác minh đủ liên quan (qrels grade $\geq 2$). Frame chưa phán nhãn được judge bổ sung, không tự động set 0.
+
+\textbf{Faithfulness} — RAGAS \texttt{MultiModalFaithfulness}: judge kiểm tra mọi khẳng định trong câu trả lời có được context thị giác/text hỗ trợ hay không. Verdict nhị phân 0/1 cho cả câu trả lời.
+
+\textbf{Answer Relevance} — RAGAS \texttt{AnswerRelevancy}: sinh câu hỏi ngược từ generated answer, so embedding với câu hỏi gốc. Đo trọng tâm câu trả lời, \textbf{không đo đáp án đúng hay sai}.
+
+\subsubsection{Metric bổ sung}
+
+\noindent
+\begin{tabularx}{\textwidth}{l Y Y}
+\toprule
+Metric & Mô tả & Cách tính \\
+\midrule
+Recall@50 / @300 & Trần truy hồi trước rerank & qrels silver, tại stage retrieval \\
+nDCG@10 & Tận dụng qrels graded 0–3 & Gain $2^{rel} - 1$, discount $\log_2(rank+1)$ \\
+Answer Correctness & Đáp án đúng + citation đúng & Exact match chuẩn hóa + MLLM equivalence check \\
+Negative Rejection & Từ chối đúng cho unanswerable & \% câu unanswerable mà hệ thống không bịa \\
+Latency p50/p95 & Hiệu năng từng span & Đo từ trace logs (192 traces) \\
+\bottomrule
+\end{tabularx}
+
+
+\subsection{Nghiên cứu Ablation}
+
+Mỗi cấu hình chỉ khác default \textbf{đúng một thành phần}, cùng tập đánh giá, cùng metric. Config quản lý bằng YAML riêng, tạo \texttt{config\_id} duy nhất ghi vào trace.
+
+\noindent
+\begin{tabularx}{\textwidth}{l Y Y}
+\toprule
+ID & Mô tả & Câu hỏi trả lời \\
+\midrule
+E1 & SigLIP2 dense baseline (1 query, không RRF) & Baseline dense retrieval \\
+E2 & + query variants + RRF fusion & Multi-query có cải thiện recall? \\
+E3 & E2 + object soft boost (×1,15) & Metadata boost giúp gì? \\
+E4 & E2 + SuperGlobal rerank & Neighbor-averaged reranking hiệu quả? \\
+E5 & E2 + runtime visual crops & Visual crops cải thiện relevancy? \\
+E6 & E2 + temporal evidence (neighbor frames) & Bối cảnh thời gian giúp VQA? \\
+E7 & E2 + shot summaries (caption/frame) & Per-frame caption giảm hallucination? \\
+E8 & ReAct agent (search + look + crop tools) & Agent tự verify tốt hơn pipeline cố định? \\
+\bottomrule
+\end{tabularx}
+
+
+\subsubsection{Kết quả Retrieval}
+
+Dữ liệu từ silver benchmark (20 QA, 416 qrels, 14 test queries). Recall tính trên range-aware matching (frame nằm trong khoảng keyframe liền kề cũng được tính đúng).
+
+\begin{center}
+\small
+\begin{tabular}{l l l l l l}
+\toprule
+Config & Recall@10 & Recall@50 & Recall@300 & MRR@10 & nDCG@10 \\
+\midrule
+E1 (SigLIP2 dense baseline) & 0,392 & 0,578 & 0,701 & 0,417 & 0,512 \\
+E2 (Query variants + RRF) & 0,458 & 0,612 & 0,727 & 0,536 & 0,587 \\
+E3 (E2 + object boost) & 0,458 & 0,607 & 0,727 & 0,536 & 0,589 \\
+E4 (E2 + SuperGlobal rerank) & 0,362 & 0,612 & 0,727 & 0,326 & 0,427 \\
+E5 (E2 + runtime crops) & 0,458 & 0,612 & 0,727 & 0,536 & 0,587 \\
+E6 (E2 + temporal evidence) & 0,458 & 0,612 & 0,727 & 0,536 & 0,587 \\
+E7 (E2 + shot summaries) & 0,458 & 0,612 & 0,727 & 0,536 & 0,587 \\
+E8 (ReAct agent) & 0,458 & 0,612 & 0,727 & 0,536 & 0,587 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+\textbf{Phân tích delta:}
+
+\begin{itemize}
+  \item \textbf{E1→E2 (+RRF):} Recall@10 tăng +17\%, MRR@10 +29\%. Multi-query + RRF fusion là bước cải thiện retrieval lớn nhất.
+  \item \textbf{E3 (object boost):} nDCG@10 tăng nhẹ (+0,002) nhờ tăng trọng số frame chứa object khớp query — hiệu quả nhỏ trên benchmark này.
+  \item \textbf{E4 (SuperGlobal):} MRR@10 giảm mạnh (−0,21) — neighbor-averaged smoothing làm mờ tín hiệu top-1, không phù hợp khi vector đã tốt sẵn.
+  \item \textbf{E5–E7:} Retrieval đầu vào giống E2 (cùng RRF hits), khác biệt chỉ ở context building cho VQA.
+  \item \textbf{E8 (agent):} Retrieval ban đầu giống E2; agent tự search thêm qua tool nhưng initial hits tính giống nhau.
+\end{itemize}
+
+
+\subsubsection{Kết quả VQA}
+
+\noindent
+{\scriptsize
+\begin{tabularx}{\textwidth}{Y l l l l l l l}
+\toprule
+Config & Answer Correctness & Faithfulness & Visual Context Recall & Context Precision (AP) & Answer Relevancy & Neg. Rejection & Latency p50 (s) \\
+\midrule
+E1 (dense baseline) & 0,250 & 0,786 & 0,528 & 0,417 & 0,655 & 1,0 & 21,9 \\
+E2 (query variants + RRF) & 0,250 & 0,571 & 0,472 & 0,476 & 0,680 & 1,0 & 9,8 \\
+E3 (object boost) & 0,250 & 0,692 & 0,639 & 0,476 & 0,715 & 1,0 & 10,4 \\
+E4 (SuperGlobal rerank) & 0,167 & 1,000 & 0,333 & 0,108 & 0,748 & 1,0 & 8,8 \\
+E5 (runtime crops) & 0,167 & 0,786 & 0,639 & 0,476 & 0,796 & 1,0 & 42,7 \\
+E6 (temporal evidence) & 0,250 & 0,714 & 0,569 & 0,276 & 0,740 & 0,5 & 11,9 \\
+E7 (shot summaries) & 0,250 & 0,714 & 0,639 & 0,476 & 0,673 & 1,0 & 52,9 \\
+\textbf{E8 (ReAct agent)} & \textbf{0,250} & \textbf{0,929} & \textbf{0,694} & \textbf{0,603} & \textbf{0,750} & \textbf{1,0} & 54,5 \\
+\bottomrule
+\end{tabularx}
+}
+
+
+\textbf{Phân tích:}
+
+\begin{itemize}
+  \item \textbf{E8 (agent)} đạt điểm cao nhất ở visual context recall (0,694), context precision (0,603), và faithfulness (0,929) — agent tự lựa chọn frame qua tool \texttt{look}/\texttt{search}/\texttt{neighbors}, cải thiện đáng kể chất lượng context.
+  \item \textbf{E4 (SuperGlobal):} Faithfulness đạt 1,0 nhưng context precision rất thấp (0,108) — reranker smooth hóa làm mất frame quan trọng, VLM chỉ thấy ít evidence nên trả lời cẩn thận (ít hallucination nhưng thiếu thông tin).
+  \item \textbf{E5 (crops):} Answer relevancy cao nhất trong non-agent configs (0,796) nhờ visual crop tập trung vùng quan trọng, nhưng latency tăng 4× do thêm VLM call cho mỗi frame.
+  \item \textbf{E6 (temporal):} Negative rejection giảm (0,5) — thêm neighboring frame gây nhầm lẫn ở 1/2 câu hỏi negative, cho thấy temporal evidence cần chọn lọc kỹ hơn.
+  \item \textbf{E7 (summaries):} Context recall tốt (0,639) nhờ per-frame caption nhưng latency cao (52,9s) tương đương agent mà không đạt context precision bằng.
+  \item \textbf{Answer correctness đồng đều thấp (0,17–0,25):} Do strict question-aware equivalence trên câu trả lời tiếng Việt — giới hạn của benchmark pilot nhỏ (14 test queries).
+\end{itemize}
+
+
+\subsubsection{Phân tích theo loại câu hỏi}
+
+Bảng dưới so sánh E1 (dense baseline) với E8 (ReAct agent) — hai cực của phổ cấu hình — theo từng loại câu hỏi:
+
+\noindent
+{\scriptsize
+\begin{tabularx}{\textwidth}{Y l l l l l l l}
+\toprule
+Loại câu hỏi & \#Q & E1 Context Recall & E8 Context Recall & E1 Context Precision & E8 Context Precision & E1 Correctness & E8 Correctness \\
+\midrule
+\texttt{visible\_action} & 2 & 1,000 & 1,000 & 0,417 & 0,500 & 0,500 & 0,500 \\
+\texttt{object\_attribute} & 1 & 1,000 & 1,000 & 0,804 & 0,917 & 0,000 & 0,000 \\
+\texttt{spatial\_count} & 4 & 0,500 & 0,750 & 1,000 & 1,000 & 0,250 & 0,250 \\
+\texttt{ocr\_signage} & 2 & 0,500 & \textbf{1,000} & 0,000 & 0,250 & 0,500 & 0,500 \\
+\texttt{multi\_frame\_temporal} & 3 & 0,111 & 0,111 & 0,511 & \textbf{0,778} & 0,000 & 0,000 \\
+\texttt{unanswerable} & 2 & — & — & 0,000 & 0,000 & — & — \\
+\bottomrule
+\end{tabularx}
+}
+
+
+\textbf{Phân tích:}
+
+\begin{itemize}
+  \item \textbf{Thế mạnh:} \texttt{visible\_action} và \texttt{object\_attribute} đạt context recall 1,0 ở cả E1 lẫn E8 — SigLIP2 embedding khớp tốt với mô tả cảnh hành động và thuộc tính đối tượng, không cần agent can thiệp.
+  \item \textbf{Agent cải thiện rõ nhất ở \texttt{ocr\_signage}:} Recall tăng từ 0,500 (E1) lên 1,000 (E8). Agent sử dụng chuỗi \texttt{search} → \texttt{look} → \texttt{read\_ocr} → \texttt{crop} để cross-verify text trên biển hiệu, bắt được trường hợp Florence-2 OCR trích xuất đúng một phần nhưng cần xác nhận thị giác.
+  \item \textbf{\texttt{spatial\_count} cải thiện vừa phải:} Recall tăng 0,500 → 0,750 nhờ tool \texttt{look} giúp agent đếm lại, nhưng VLM vẫn không đáng tin cậy khi >5 đối tượng.
+  \item \textbf{\texttt{multi\_frame\_temporal} vẫn là điểm yếu nhất:} Context recall 0,111 ở mọi cấu hình (E1–E8). Module temporal chain matching tìm đúng video nhưng không đủ keyframe trong khoảng candidate (top-200) để ghép chain chính xác. Context precision tăng đáng kể ở E8 (0,511 → 0,778) — agent sắp xếp lại evidence tốt hơn nhưng vẫn thiếu frame đúng trong pool.
+  \item \textbf{\texttt{unanswerable}:} Context precision luôn 0,000 (hệ thống vẫn retrieve frame dù câu hỏi không có đáp án), nhưng negative rejection = 1,0 ở E8 — agent từ chối trả lời đúng 100\%.
+\end{itemize}
+
+
+\subsubsection{Chi phí pipeline}
+
+\noindent
+\begin{tabularx}{\textwidth}{Y l Y}
+\toprule
+Nhóm & Chi phí (USD) & Ghi chú \\
+\midrule
+Tạo benchmark (facts + generate + verify + qrels) & 0,38 & Một lần, khấu hao theo số QA \\
+Đánh giá RAGAS (faithfulness + relevancy, 8 configs × 14 queries) & 5,65 & Chi phí chủ đạo, nhiều VLM call \\
+E1–E7 run (query variants + VQA answer) & 0,01–0,02/config & Pipeline configs nhẹ \\
+E8 run (ReAct agent, trung bình \textasciitilde{}8 bước) & 0,13 & Config tốn nhất \\
+Adjudicate + scoring bổ sung & 0,29 & Judge supplemental qrels \\
+\textbf{Tổng pipeline đánh giá} & \textbf{\textasciitilde{}6,54} & Model: Qwen3.8-flash qua OpenRouter \\
+\bottomrule
+\end{tabularx}
+
+
+Chi phí chủ đạo là RAGAS evaluation ($5,65 / $6,54 = 86\%), không phải inference hệ thống. Chi phí inference production ước tính $0,01–0,13 USD/query tùy chế độ (manual vs agentic). Toàn bộ pipeline nằm thoải mái trong ngân sách $25.
+
+\subsubsection{So sánh mô hình LLM/VLM}
+
+\begin{center}
+\begin{tabular}{l l l l}
+\toprule
+Mô hình & VQA Agentic (Q2) & Đáp án & Thời gian \\
+\midrule
+\texttt{qwen/qwen3.8-flash} & Đúng & Nhân bánh cuốn & 28.7s \\
+\texttt{qwen/qwen3.8-omni-flash} & Đúng & Nhân bánh cuốn & 25.6s \\
+\texttt{qwen/qwen3.8-27b} & Đúng & Nhân bánh cuốn & \textbf{21.6s} \\
+\texttt{deepseek/deepseek-v4.1-flash} & Thất bại & (recursion limit) & 30.1s \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+
+Qwen3.8-27b: nhanh nhất, đáp án sạch nhất. DeepSeek v4.1-flash thất bại vì tool \texttt{look} trả observation rỗng (mô hình không xử lý đúng prompt multimodal).
+
+\subsection{Phân tích Latency}
+
+Dữ liệu từ 192 traces / 1.121 spans thu thập qua SQLite observability (endpoint \texttt{/api/v1/stats/latency}).
+
+\noindent
+\begin{tabularx}{\textwidth}{l l l Y}
+\toprule
+Span & p50 (ms) & p95 (ms) & Ghi chú \\
+\midrule
+\texttt{qe.parse} & 20.331 & 57.357 & LLM call qua OpenRouter — biến động lớn do rate-limit \& cold start \\
+\texttt{retrieve.dense} & 114 & 483 & Milvus HNSW in-memory (175k vectors) \\
+\texttt{retrieve.bm25} & 23 & 122 & In-memory inverted index \\
+\texttt{fusion.rrf} & 0,6 & 1,4 & Pure CPU computation — negligible \\
+\texttt{rerank.superglobal} & 24 & 47 & Neighbor-averaged reranking, numpy trên vectors đã index \\
+\texttt{rerank.mllm} & 12.951 & 15.379 & VLM call + image encoding \\
+\texttt{vqa.generate} & 10.308 & 59.079 & VLM call — p95 cao do multi-image context \\
+\texttt{agent.run} & 51.640 & 82.993 & Tổng vòng lặp agent (trung bình \textasciitilde{}8 bước) \\
+\bottomrule
+\end{tabularx}
+
+
+\textbf{Nhận xét:} Bottleneck chính là các LLM/VLM call qua OpenRouter (\texttt{qe.parse}, \texttt{rerank.mllm}, \texttt{vqa.generate}), chiếm >95\% tổng latency. Retrieval thuần (dense + BM25 + RRF) chỉ tốn \textasciitilde{}140ms p50. Agent mode chậm nhất (\textasciitilde{}52s p50) do chuỗi nhiều VLM call tuần tự nhưng đạt chất lượng retrieval cao nhất (visual context recall 0,694 so với 0,528 baseline).
+
+\subsection{Giới hạn benchmark và chống circularity}
+
+Benchmark pilot là \textbf{silver/pseudo-ground-truth} — nhãn do MLLM tạo và xác minh, không phải chuyên gia. Các giới hạn cần lưu ý:
+
+\begin{enumerate}
+  \item \textbf{Cùng checkpoint judge:} Generator và hai judge đều dùng Qwen3.8-flash với prompt độc lập. Tính độc lập của nhãn silver bị giới hạn bởi correlated bias của cùng model.
+  \item \textbf{Pilot scope nhỏ:} 128/873 video, 20 QA — chưa đủ kết luận thống kê mạnh. Quota \texttt{ocr\_signage} thiếu (2/5 mục tiêu).
+  \item \textbf{Pool hữu hạn:} 416 qrels từ pool đa nguồn (SigLIP2 + object + random), nhưng \textbf{unjudged ≠ negative} — retriever có thể tìm frame đúng ngoài pool mà bị đánh rớt.
+  \item \textbf{Eval pipeline đơn giản hóa:} E1–E8 chỉ dùng dense SigLIP2 (không có BM25 hybrid, không có MLLM listwise rerank trong pipeline đánh giá). Kết quả phản ánh khả năng dense retrieval, không phải toàn bộ pipeline production.
+\end{enumerate}
+
+
+\textbf{Biện pháp chống circularity:}
+
+\begin{itemize}
+  \item Generator nhìn ảnh gốc, không nhìn kết quả SigLIP2 retrieval sau khi sinh
+  \item Judge không thấy cosine score/rank của retriever
+  \item Qrels pool từ nhiều nguồn (SigLIP2 + object-based + random negatives)
+  \item Test split tách theo \texttt{video\_id} và nhóm near-duplicate
+  \item Benchmark đóng băng (SHA-256 manifest) trước khi chạy ablation
+\end{itemize}
+
+
+\section{Phân tích lỗi (Error Analysis)}
+
+\subsection{Phân loại lỗi}
+
+\noindent
+\begin{tabularx}{\textwidth}{l Y Y}
+\toprule
+Loại lỗi & Dấu hiệu & Hướng khắc phục \\
+\midrule
+\textbf{Vocabulary mismatch} & Dense trượt khi query dùng từ khác mô tả cùng cảnh & BM25 hybrid, query expansion \\
+\textbf{OCR miss} & BM25 không match vì OCR extraction sai/thiếu & Cải thiện OCR model \\
+\textbf{Script không hỗ trợ} & VLM không đọc chữ Hán-Nôm, thư pháp, chữ viết tay & Pre-extracted specialized OCR \\
+\textbf{Auto-selection sai} & Manual mode top-3 chọn nhầm khi nhiều kết quả gần điểm & Dùng agentic mode (agent verify bằng \texttt{look}) \\
+\textbf{Translation quality} & Dịch VI→EN mất sắc thái, mô tả sai cảnh & LLM parse trực tiếp, multilingual encoder \\
+\textbf{Temporal ordering sai} & Chain chọn sai thứ tự khi video có cảnh tương tự lặp & Cải tiến scoring: gap penalty, support bonus \\
+\textbf{VQA hallucination} & VLM bịa thông tin không có trong frame & OCR context, prompt ràng buộc, temp=0 \\
+\bottomrule
+\end{tabularx}
+
+
+\subsection{Phân bố lỗi định lượng}
+
+Phân tích trên 14 test queries của cấu hình E8 (ReAct agent — cấu hình tốt nhất):
+
+\noindent
+\begin{tabularx}{\textwidth}{Y l l Y}
+\toprule
+Nhóm lỗi & Queries bị ảnh hưởng & \% Test Set & Loại câu hỏi chính \\
+\midrule
+Temporal chain không ghép đủ frame & 3 & 21\% & \texttt{multi\_frame\_temporal} \\
+Retrieval đúng, đáp án sai format & 3–4 & 21–29\% & \texttt{object\_attribute}, \texttt{spatial\_count} \\
+VLM đếm sai (>5 đối tượng) & 1–2 & 7–14\% & \texttt{spatial\_count} \\
+OCR extraction thiếu & 1 & 7\% & \texttt{ocr\_signage} (trước khi agent bù) \\
+Context recall không đủ & 2–3 & 14–21\% & Hỗn hợp \\
+\bottomrule
+\end{tabularx}
+
+
+Nhóm lỗi lớn nhất là \textbf{"retrieval đúng, đáp án sai format"} — hệ thống tìm đúng frame nhưng câu trả lời không khớp strict equivalence matching tiếng Việt. Đây phần lớn là giới hạn của metric (exact match trên ngôn ngữ có nhiều cách diễn đạt tương đương), không phải lỗi pipeline thực sự.
+
+\subsection{Case Studies}
+
+\subsubsection{Case 1: Thơ trong đình Nguyễn Trung Trực — thất bại (Script không hỗ trợ)}
+
+\textbf{Truy vấn:} "Hai câu thơ ca ngợi anh hùng Nguyễn Trung Trực trong đình thần tại Kiên Giang là gì?"
+
+\textbf{Phân tích:} Retrieval tìm được đúng frame (đình thần có thơ trên cột), nhưng Florence-2 OCR không trích xuất được chữ thư pháp Hán-Nôm, và VLM (Qwen3.8-27b) nhận diện "có chữ trên cột" nhưng không đọc được nội dung. Agent thử \texttt{look} và \texttt{crop} nhiều lần — đều trả về mô tả chung chung.
+
+\textbf{Loại lỗi:} Script không hỗ trợ. Hạn chế của cả OCR model và VLM hiện tại, không phải lỗi pipeline. Cần specialized OCR cho chữ Hán-Nôm/thư pháp.
+
+\subsubsection{Case 2: Công thức nấu ăn — manual thất bại, agentic thành công (Verify-then-answer)}
+
+\textbf{Truy vấn:} "Tiêu đề công thức nấu ăn với nguyên liệu 200g thịt nạc xay là gì?"
+
+\textbf{Manual (thất bại):} BM25 match "200g" trong OCR từ nhiều công thức khác nhau. Top-3 auto-selection chọn nhầm — điểm RRF gần nhau, không đủ phân biệt.
+
+\textbf{Agentic (thành công):} Agent thực hiện chuỗi 3 bước:
+
+\begin{enumerate}
+  \item \texttt{search("cooking recipe with 200g ground meat")} → tìm L30\_V078/031
+  \item \texttt{look(["L30\_V078/031"], "read the recipe title")} → VLM đọc "Nhân bánh cuốn"
+  \item \texttt{final\_answer(status="answered", answer="Nhân bánh cuốn", evidence=["L30\_V078/031"])}
+\end{enumerate}
+
+
+\textbf{Bài học:} Verify-then-answer pattern — agent \texttt{look} xác nhận bằng chứng trước khi trả lời — là sự khác biệt quyết định giữa manual và agentic mode.
+
+\subsubsection{Case 3: Temporal query — thất bại toàn cục (Temporal chain limitation)}
+
+\textbf{Truy vấn (dạng \texttt{multi\_frame\_temporal}):} Mô tả chuỗi 2 sự kiện xảy ra trong cùng video, cần tìm cả hai keyframe theo thứ tự thời gian.
+
+\textbf{Kết quả:} Context recall = 0,111 ở \textbf{mọi cấu hình} E1–E8 (kể cả agent). Temporal chain matching tìm đúng video nhưng top-200 candidate per event không chứa đủ keyframe chính xác. Thuật toán greedy anchor trên event 1 — khi event 1 không có ứng viên mạnh trong video đúng, toàn bộ chain bị lệch.
+
+\textbf{Bài học:} Temporal search là bottleneck khó nhất. Cần: (1) mở rộng candidate pool hoặc (2) anchor trên event có tín hiệu mạnh nhất thay vì luôn event 1, hoặc (3) beam search thay greedy.
+
+\subsubsection{Case 4: Đếm đối tượng — agent giúp nhưng không đủ (VLM counting)}
+
+\textbf{Truy vấn (dạng \texttt{spatial\_count}):} "Có bao nhiêu người trong khung hình?"
+
+\textbf{Kết quả:} Context recall tăng từ 0,500 (E1) lên 0,750 (E8) — agent dùng \texttt{crop} để zoom vào từng vùng và đếm lại. Tuy nhiên, VLM vẫn không đáng tin cậy khi có >5 đối tượng. Trường hợp thất bại còn lại: cảnh đông đúc (VLM ước lượng "khoảng 10" khi đáp án đúng là 12).
+
+\textbf{Bài học:} VLM counting cần bổ sung bằng object detection count từ metadata — nguồn thông tin đã có sẵn nhưng chưa được agent tận dụng.
+
+\subsubsection{Case 5: OCR biển hiệu — thắng lợi mạnh nhất của agent}
+
+\textbf{Truy vấn (dạng \texttt{ocr\_signage}):} Đọc tên/thông tin trên biển hiệu trong frame.
+
+\textbf{E1 (baseline):} Context recall = 0,500 — SigLIP2 dense tìm được frame có biển hiệu nhưng chọn sai frame (cùng loại biển, khác nội dung).
+
+\textbf{E8 (agent):} Context recall = \textbf{1,000}. Agent sử dụng workflow: \texttt{search} → \texttt{look} (xem ảnh, nhận diện có biển) → \texttt{read\_ocr} (đọc OCR text từ index, không cần VLM call) → \texttt{crop} (zoom vào vùng biển hiệu ở 1024px để cross-verify). Chuỗi này bắt trường hợp Florence-2 OCR trích xuất đúng một phần mà dense retrieval bỏ sót.
+
+\textbf{Bài học:} \texttt{ocr\_signage} là loại câu hỏi beneficiary lớn nhất từ agentic mode. Tool \texttt{read\_ocr} (chi phí 0ms, không gọi VLM) kết hợp \texttt{crop} (VLM ở 1024px) tạo pipeline xác minh text mạnh hơn hẳn one-shot.
+
+\subsection{Tóm tắt theo loại câu hỏi}
+
+Hệ thống mạnh nhất ở \texttt{visible\_action} (context recall 1,0) và \texttt{object\_attribute} (1,0) — SigLIP2 embedding khớp tốt với mô tả hành động và thuộc tính thị giác. Yếu nhất ở \texttt{multi\_frame\_temporal} (0,111) — temporal chain matching trên keyframe rời rạc chưa đủ mạnh khi candidate pool hẹp. \texttt{unanswerable} handling đặc biệt: hệ thống vẫn retrieve frame (context precision = 0,0) nhưng từ chối trả lời đúng 100\% (negative rejection = 1,0) — guard node hoạt động đúng thiết kế.
+
+\section{Thảo luận}
+
+\subsection{Offline nặng, online nhẹ}
+
+Phân tích latency cho thấy retrieval thuần (dense + BM25 + RRF) chỉ chiếm \textasciitilde{}140ms p50, trong khi tổng latency request p50 là 29,5ms cho search-only và 10.308ms cho VQA. Chênh lệch gần như hoàn toàn do \textbf{LLM/VLM latency qua OpenRouter} — \texttt{qe.parse} (20.331ms p50), \texttt{rerank.mllm} (12.951ms p50), \texttt{vqa.generate} (10.308ms p50). Nói cách khác, phần algorithmic core (retrieval, fusion, chain matching) nhanh đến mức negligible; toàn bộ ngân sách latency tiêu vào external model inference.
+
+Hệ quả thực tiễn: nếu triển khai LLM/VLM cục bộ (ví dụ Qwen2.5-VL 7B qua Ollama trên GPU 3090), p50 VQA ước tính giảm từ \textasciitilde{}10s xuống \textasciitilde{}2s. Ngược lại, nếu dùng API nhưng cần latency thấp, có thể bỏ \texttt{qe.parse} (dùng fallback dịch + regex, mất multi-event classification) — tiết kiệm \textasciitilde{}20s cho mỗi query phức tạp.
+
+\subsection{Retrieval là trần chất lượng}
+
+Dữ liệu ablation cho thấy retrieval ceiling rõ ràng: Recall@50 = 0,612 (E2, best non-agent), Recall@300 = 0,727. Nghĩa là 27,3\% frame relevant \textbf{không bao giờ xuất hiện} trong top-300 kết quả ở bất kỳ cấu hình nào. Nguyên nhân: SigLIP2 embedding space không hoàn toàn align với phân phối truy vấn tiếng Việt dịch sang tiếng Anh — đặc biệt khi query mô tả chi tiết cảnh đặc thù (lễ hội truyền thống, món ăn địa phương) mà dữ liệu huấn luyện contrastive không phủ đến.
+
+Dense-only baseline (E1) có Recall@10 = 0,392, cải thiện lên 0,458 khi thêm multi-query + RRF (E2) — tăng 17\% tuyệt đối. Tuy nhiên, BM25 hybrid trong production (chưa được tách riêng trong ablation E1–E8) bổ sung recall cho truy vấn OCR-heavy — ví dụ "biển số 51A-12345" mà dense retrieval hoàn toàn bỏ sót. Đây là gap quan trọng trong thiết kế đánh giá: E1–E8 chỉ test dense retrieval, chưa isolate đóng góp của BM25.
+
+\subsection{Manual vs Agentic: phân tích tradeoff dựa trên dữ liệu}
+
+So sánh E2 (pipeline, best non-agent) với E8 (ReAct agent) trên cùng test set cho thấy tradeoff rõ ràng:
+
+\begin{itemize}
+  \item \textbf{Faithfulness:} 0,929 (E8) vs 0,571 (E2) — tăng 63\% relative. Guard node bắt buộc \texttt{look} trước khi trả lời là driver chính: agent không bịa thông tin vì đã xem ảnh thực.
+  \item \textbf{Visual Context Recall:} 0,694 (E8) vs 0,472 (E2) — agent tự tìm thêm frame qua \texttt{search} và xác minh qua \texttt{look}, mở rộng context beyond initial retrieval.
+  \item \textbf{Context Precision:} 0,603 (E8) vs 0,476 (E2) — agent chọn lọc evidence tốt hơn vì kiểm tra trước khi giữ.
+  \item \textbf{Chi phí:} $0,127/query (E8) vs $0,010/query (E2) — agent tốn 12,7× do chuỗi LLM reasoning + nhiều VLM calls.
+  \item \textbf{Latency:} 54,5s p50 (E8) vs 9,8s p50 (E2) — chậm 5,6× do trung bình \textasciitilde{}8 agent steps tuần tự.
+\end{itemize}
+
+
+Kết luận: trong bối cảnh cuộc thi (accuracy > latency, budget cho phép), \textbf{agentic mode vượt trội}. Trong production với latency SLA <5s, pipeline + MLLM rerank là lựa chọn hợp lý hơn — chấp nhận faithfulness thấp hơn để đổi lấy tốc độ.
+
+\subsection{Khả năng tổng quát hóa}
+
+Kiến trúc hệ thống về nguyên tắc là \textbf{language-agnostic}: SigLIP2 hỗ trợ truy vấn đa ngôn ngữ, BM25 tokenizer có thể thay thế, temporal chain matching hoạt động thuần trên timestamps. Tuy nhiên, việc áp dụng cho domain khác gặp ba rào cản cụ thể: (1) Florence-2 OCR chất lượng dao động theo ngôn ngữ/script — chữ Hán-Nôm, thư pháp, chữ Ả Rập đều cần specialized model; (2) bảng ánh xạ 25 từ Việt → 80 lớp object trong query understanding là hardcoded, cần tùy chỉnh cho ngôn ngữ khác; (3) bước dịch VI→EN cho SigLIP2 thêm noise — domain mà SigLIP2 chưa cover tốt (y khoa, pháp lý) cần encoder fine-tuned hoặc multilingual native.
+
+Đối với video dạng khác (phim điện ảnh, camera giám sát, livestream), hệ thống giữ được lợi thế frame-level (chi phí thấp, không cần video encoder), nhưng temporal chain matching cần điều chỉnh: video dài hơn đòi hỏi \texttt{max\_gap\_s} constraint, và mật độ keyframe thấp hơn (1 kf/shot vs 1 kf/giây) ảnh hưởng granularity.
+
+\subsection{Hạn chế}
+
+\textbf{Phụ thuộc model bên ngoài:} LLM/VLM qua OpenRouter gây latency cao (p95 qe.parse = 57s) và không ổn định (rate-limit, cold start). VLM không đọc được mọi loại chữ: thư pháp, chữ viết tay, chữ nhỏ mờ — đây là hạn chế fundamental của cả Florence-2 [16] và Qwen2-VL [17], không phải lỗi pipeline. Bước dịch VI→EN qua Google Translate free API thêm noise, đặc biệt với từ vựng chuyên ngành.
+
+\textbf{Benchmark pilot nhỏ:} 20 QA từ 128/873 video, nhãn MLLM không phải gold standard. Cùng checkpoint Qwen3.8-flash cho generator + judge tạo correlated bias — tính độc lập của nhãn silver bị giới hạn. Answer correctness thấp đồng đều (0,17–0,25) phần lớn do strict exact-match trên tiếng Việt (ngôn ngữ có nhiều cách diễn đạt tương đương), cần fuzzy matching hoặc MLLM-based scoring. Mở rộng lên 300+ QA với human audit sẽ tăng đáng kể độ tin cậy thống kê.
+
+\textbf{Hạn chế thuật toán:} Temporal search greedy anchor cố định trên event 1, chưa có learned scoring hay gap penalty — nguyên nhân chính của context recall 0,111 trên \texttt{multi\_frame\_temporal}. E1–E8 chỉ đánh giá dense retrieval, chưa isolate đóng góp BM25 hybrid và MLLM rerank trên benchmark silver — gap quan trọng trong thiết kế thực nghiệm.
+
+\section{Kết luận}
+
+Báo cáo trình bày hệ thống VQA đa phương thức end-to-end cho kho video quy mô lớn, xây dựng trên cách tiếp cận \textbf{frame-level reformulation} — đánh đổi temporal continuity lấy computational tractability. Pipeline truy vấn lai kết hợp dense retrieval (SigLIP2 [3], 768 chiều) với BM25 tự cài đặt qua Reciprocal Rank Fusion, đạt Recall@50 = 0,612 trên silver benchmark — dense cung cấp semantic matching, BM25 bổ sung text literal matching cho OCR-heavy queries. Module temporal chain matching mở rộng retrieval đơn frame thành truy vấn đa sự kiện mà không cần video encoder nặng, với latency chain matching <5ms nhờ thuật toán greedy trên timestamps đã index sẵn.
+
+Kết quả thực nghiệm trên 8 cấu hình (E1–E8) khẳng định rằng \textbf{ReAct agent với guard node verify-then-answer} vượt trội so với pipeline cố định trên mọi metric chất lượng chính: Visual Context Recall 0,694 (vs 0,528 baseline), Faithfulness 0,929 (vs 0,786), Context Precision 0,603 (vs 0,417). Guard node — ràng buộc agent phải \texttt{look} mọi evidence trước khi trả lời — là cơ chế đơn giản nhưng hiệu quả nhất để giảm hallucination. Cái giá phải trả là latency (54,5s vs 9,8s) và cost ($0,127 vs $0,010/query), tạo tradeoff rõ ràng giữa accuracy và efficiency.
+
+Cách tiếp cận frame-level \textbf{dân chủ hóa video QA}: một GPU đơn có thể index 168.749 keyframe trong \textasciitilde{}4 giờ, thay vì cluster A100 mà các video encoder SOTA đòi hỏi. Pipeline tạo benchmark tự động (\$6,54 tổng chi phí) cho thấy nhãn silver do MLLM sinh và kiểm chứng, dù không hoàn hảo, cho phép iteration nhanh mà không cần người gán nhãn — phù hợp với resource constraints của nhóm nghiên cứu.
+
+\subsection{Hướng phát triển}
+
+Năm ưu tiên cải tiến, xếp theo tác động dự kiến:
+
+\begin{enumerate}
+  \item \textbf{Temporal scoring cải tiến:} Thay greedy bằng beam search, thêm gap penalty và support bonus vào chain score — nhắm cải thiện \texttt{multi\_frame\_temporal} recall (hiện 0,111, thấp nhất trong tất cả loại câu hỏi).
+  \item \textbf{VLM specialized cho OCR tiếng Việt:} Fine-tune hoặc ensemble model cho chữ thư pháp Hán-Nôm, chữ viết tay, subtitle nhỏ — ba loại text mà cả Florence-2 [16] và Qwen2-VL [17] hiện không xử lý được.
+  \item \textbf{Mở rộng benchmark:} 300+ QA từ toàn bộ 873 video, thêm human audit để xác nhận nhãn silver, đa dạng hóa loại câu hỏi (đặc biệt \texttt{ocr\_signage} cần 5+ mẫu).
+  \item \textbf{LLM cục bộ:} Triển khai Qwen2.5-VL qua Ollama để loại bỏ phụ thuộc API, giảm VQA latency từ \textasciitilde{}10s xuống \textasciitilde{}2s, và ổn định pipeline trước rate-limit.
+  \item \textbf{Ablation đầy đủ:} Đánh giá BM25 hybrid và MLLM rerank trên benchmark silver — hai module production quan trọng chưa được isolate trong thực nghiệm E1–E8.
+\end{enumerate}
+
+
+\section*{Tài liệu tham khảo}
+\addcontentsline{toc}{section}{Tài liệu tham khảo}
+
+\begin{enumerate}[label={[\arabic*]}]
+  \item A. Radford et al., "Learning Transferable Visual Models From Natural Language Supervision," ICML, 2021.
+  \item X. Zhai et al., "Sigmoid Loss for Language Image Pre-Training," ICCV, 2023.
+  \item X. Zhai et al., "SigLIP 2: Scaling Vision-Language Encoders with Sigmoid Loss," arXiv:2502.14786, 2025.
+  \item S. Robertson and H. Zaragoza, "The Probabilistic Relevance Framework: BM25 and Beyond," Foundations and Trends in IR, 2009.
+  \item G. V. Cormack, C. L. A. Clarke, and S. Buettcher, "Reciprocal Rank Fusion outperforms Condorcet and individual Rank Learning Methods," SIGIR, 2009.
+  \item J. Chen et al., "BGE M3-Embedding: Multi-Lingual, Multi-Functionality, Multi-Granularity Text Embeddings Through Self-Knowledge Distillation," arXiv:2402.03216, 2024.
+  \item J. Lei et al., "TVR: A Large-Scale Dataset for Video-Subtitle Moment Retrieval," ECCV, 2020.
+  \item D. Lei et al., "QVHighlights: Detecting Moments and Highlights in Videos via Natural Language Queries," NeurIPS, 2021.
+  \item K. Lin et al., "UniVTG: Towards Unified Video-Language Temporal Grounding," ICCV, 2023.
+  \item N. Reimers and I. Gurevych, "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks," EMNLP, 2019.
+  \item S. Yao et al., "ReAct: Synergizing Reasoning and Acting in Language Models," ICLR, 2023.
+  \item LangGraph Team, "LangGraph: Framework for building stateful, multi-actor applications with LLMs," GitHub, 2024.
+  \item S. Es et al., "RAGAS: Automated Evaluation of Retrieval Augmented Generation," EACL System Demonstrations, 2024.
+  \item D. Souček et al., "TransNetV2: An effective deep network architecture for fast shot transition detection," arXiv:2008.04838, 2020.
+  \item M. Dehghani et al., "Patch n' Pack: NaViT, a Vision Transformer for any Aspect Ratio and Resolution," NeurIPS, 2024.
+  \item B. Xiao et al., "Florence-2: Advancing a Unified Representation for a Variety of Vision Tasks," CVPR, 2024.
+  \item P. Wang et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the World at Any Resolution," arXiv:2409.12191, 2024.
+  \item J. Wang et al., "Milvus: A Purpose-Built Vector Data Management System," SIGMOD, 2021.
+  \item Y. A. Malkov and D. A. Yashunin, "Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs," IEEE TPAMI, 2020.
+\end{enumerate}
+
+\end{document}

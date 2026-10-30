@@ -1,4 +1,4 @@
-graph TD
+graph LR
     Videos["Videos<br/>(L21–L30)"] --> KFExtract["Keyframe Extraction<br/>(scene changes)"]
     KFExtract --> JPGs["Keyframes<br/>keyframes/{video}/{NNN}.jpg"]
     KFExtract --> CSVs["Map-Keyframes CSVs<br/>frame_idx · pts_time · fps"]

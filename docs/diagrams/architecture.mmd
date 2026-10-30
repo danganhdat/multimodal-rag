@@ -1,10 +1,10 @@
-graph TB
+graph LR
     subgraph Frontend["Frontend (React + Vite + Bulma)"]
         UI["Search UI<br/>Multi-query · Sketch · Filters"]
     end
 
     subgraph Backend["Backend (FastAPI)"]
-        direction TB
+        direction LR
         Translator["Google Translate<br/>VI → EN"]
         Splitter["Sentence Splitter<br/>Paragraph → N sentences"]
 

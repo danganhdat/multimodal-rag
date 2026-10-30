@@ -1,0 +1,43 @@
+seed: 42
+target_qa: 20
+max_usd: 25.0
+api_workers: 2
+reasoning_max_tokens: 512
+model: qwen/qwen3.8-flash
+base_url: https://openrouter.ai/api/v1
+data_root: data/video_rag_eval
+sources:
+  keyframes: D:/keyframes
+  maps: D:/map-keyframes
+  videos: D:/video
+  objects: D:/objects
+  media_info: D:/media-info
+  legacy_clip: D:/clip-features-32
+milvus:
+  uri: http://localhost:19530
+  collection: aic25_keyframes
+  siglip2_model: google/siglip2-base-patch16-512
+sampling:
+  max_per_video: 3
+  max_per_duplicate_group: 1
+  quotas:
+    object_attribute: 0.20
+    visible_action: 0.15
+    ocr_signage: 0.25
+    spatial_count: 0.15
+    multi_frame_temporal: 0.15
+    unanswerable: 0.10
+  phash_distance: 6
+  ssim_min: 0.97
+  cosine_min: 0.985
+  max_proposals: 120
+pool:
+  dense_top: 12
+  auxiliary_top: 8
+  random_negatives: 3
+  supplemental_top: 10
+evaluation:
+  context_k: 5
+  retrieval_k: [50, 300]
+  relevant_threshold: 2
+  ragas_version: 0.4.3

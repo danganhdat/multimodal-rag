@@ -1,0 +1,77 @@
+qe:
+  enabled: true
+  multi_query: false
+  max_variants: 3
+  prompt_version: "v1"
+
+search:
+  dense: true
+  bm25: true
+  top_n: 200
+  rrf_k: 60
+  variant_search: true
+
+filter:
+  objects: false
+  metadata: false
+  sketch: false
+
+metadata_boost:
+  enabled: false
+  alpha: 0.05
+  max_boost: 0.1
+
+temporal:
+  enabled: true
+  strategy: "greedy"
+  max_gap_s: null
+  max_candidates_per_event: 200
+  top_chains: 20
+  tolerance_threshold: 3
+
+rerank:
+  method: sg+mllm
+  mllm_top: 10
+  timeout_ms: 15000
+  fallback_to_previous: true
+  # Legacy — kept for ablation rollback
+  top: 50
+  sg_m: 3
+  vlm_top: 20
+
+shot_validation:
+  enabled: false
+
+vqa:
+  enabled: true
+  top_k_evidence: 3
+
+agent:
+  frame_input: false
+  shot_summary: false
+  max_steps: 10
+  timeout_s: 60
+  max_search_calls: 5
+  max_look_calls: 5
+  max_total_tokens: 50000
+  checkpointer: "postgres"
+  postgres_uri: ""
+  max_history_tokens: 4000
+
+manual:
+  upvote_weight: 1.0
+  downvote_penalty: 0.5
+
+api:
+  auth: false
+  rate_limit: false
+  cache: false
+
+online_judge:
+  enabled: false
+  sample_rate: 0.1
+
+llm:
+  base_url: env
+  model: env
+  vlm_model: env

@@ -1,0 +1,87 @@
+# Release Criteria & Rollback Plan
+# This file documents thresholds and rollback procedures for V1.
+
+release_criteria:
+  # Minimum quality thresholds (must pass before release)
+  context_recall_min: 0.70
+  context_precision_min: 0.50
+  faithfulness_min: 0.70
+  answer_relevance_min: 0.70
+  answer_correctness_min: 0.60
+
+  # Maximum latency (p95)
+  search_p95_ms: 300
+  vqa_p95_ms: 5000
+  agentic_p95_ms: 15000
+
+  # Maximum cost per query (USD)
+  max_cost_per_search: 0.005
+  max_cost_per_vqa: 0.05
+  max_cost_per_agentic: 0.10
+
+  # Human audit
+  human_audit_sample_size: 50
+  human_audit_min_accuracy: 0.70
+
+  # Error rates
+  max_error_rate: 0.02
+  max_zero_result_rate: 0.10
+
+rollback:
+  # Feature flags — disable new components one at a time
+  steps:
+    - flag: "rerank.method"
+      rollback_to: "superglobal"
+      reason: "Disable MLLM reranking, fall back to superglobal"
+
+    - flag: "temporal.strategy"
+      rollback_to: "greedy"
+      reason: "Revert to greedy temporal matching"
+
+    - flag: "search.variant_search"
+      rollback_to: false
+      reason: "Disable variant expansion search"
+
+    - flag: "metadata_boost.enabled"
+      rollback_to: false
+      reason: "Disable metadata soft boost"
+
+    - flag: "qe.prompt_version"
+      rollback_to: "v1"
+      reason: "Revert to v1 QE prompt"
+
+    - flag: "search.bm25"
+      rollback_to: false
+      reason: "Keep BM25 disabled (code preserved)"
+
+  # Config versioning
+  config_versioning:
+    method: "config_id hash"
+    description: "Every request logs config_id. Can revert to any prior config."
+
+  # Index rollback
+  index:
+    method: "Milvus collection alias"
+    description: "Point alias to previous collection version. No downtime."
+
+monitoring:
+  # Dashboard panels (Phase 8)
+  dashboard_url: "/dashboard"
+
+  # Alert thresholds
+  alerts:
+    search_p95_warn_ms: 250
+    search_p95_critical_ms: 500
+    zero_result_spike_factor: 2.0  # vs 7-day average
+    error_rate_threshold: 0.05
+    cost_daily_budget_usd: 10.0
+
+  # Weekly review checklist
+  weekly_review:
+    - "Top errors by taxonomy category"
+    - "Latency trend (p50/p95/p99)"
+    - "Cost trend (per-request and daily)"
+    - "Zero-result rate trend"
+    - "Feedback distribution (thumbs up/down)"
+    - "Agent step count distribution"
+    - "MLLM rerank fallback rate"

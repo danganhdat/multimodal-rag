@@ -1,33 +1,36 @@
+import html
 import os
+import ssl
 from functools import lru_cache
-from pathlib import Path
 
-from .config import settings
+import httpx
 
-_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-_client = None
+_TRANSLATE_URL = "https://translate.googleapis.com/translate_a/single"
+
+_http_client: httpx.Client | None = None
 
 
-def _get_client():
-    global _client
-    if _client is not None:
-        return _client
+def _get_client() -> httpx.Client:
+    global _http_client
+    if _http_client is not None:
+        return _http_client
 
-    creds = settings.GOOGLE_APPLICATION_CREDENTIALS
-    if creds:
-        creds_path = Path(creds)
-        if not creds_path.is_absolute():
-            creds_path = _PROJECT_ROOT / creds_path
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(creds_path)
-        print(f"GCP credentials: {creds_path} (exists={creds_path.exists()})")
+    verify: ssl.SSLContext | bool = True
+    if os.name == "nt":
+        import truststore
+        verify = truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
-    from google.cloud import translate_v2 as translate
-    _client = translate.Client()
-    return _client
+    _http_client = httpx.Client(verify=verify, timeout=10)
+    return _http_client
 
 
 @lru_cache(maxsize=256)
 def translate_vi_to_en(text: str) -> str:
-    client = _get_client()
-    result = client.translate(text, source_language="vi", target_language="en")
-    return result["translatedText"]
+    resp = _get_client().get(
+        _TRANSLATE_URL,
+        params={"client": "gtx", "sl": "vi", "tl": "en", "dt": "t", "q": text},
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    translated = "".join(segment[0] for segment in data[0] if segment[0])
+    return html.unescape(translated)

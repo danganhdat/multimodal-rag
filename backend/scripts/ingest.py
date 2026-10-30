@@ -25,7 +25,7 @@ from app.config import settings
 
 CHUNK_SIZE = 1000
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-PKL_PATH = PROJECT_ROOT / "clip-features-32" / "aic25_batch1_features.pkl"
+PKL_PATH = PROJECT_ROOT / "siglip-tsbir-features" / "aic25_batch1_features.pkl"
 
 
 def create_collection(client, name):
@@ -128,7 +128,9 @@ def ingest():
             skipped += 1
             continue
 
-        meta = csv_map.get(key, {"frame_idx": kf, "pts_time": 0.0, "fps": 25.0})
+        meta = csv_map.get(key)
+        if meta is None:
+            raise ValueError(f"No CSV entry for {key}. Ensure map-keyframes/{video}.csv exists and contains n={kf}.")
         ocr_text = item.get("ocr", "").replace("<sep>", " ").strip()
         objs = item.get("objects", [])[:20]
         objects_set.update(objs)

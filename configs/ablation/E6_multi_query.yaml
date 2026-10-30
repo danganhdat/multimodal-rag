@@ -1,0 +1,4 @@
+qe:
+  enabled: true
+  multi_query: true
+  max_variants: 3

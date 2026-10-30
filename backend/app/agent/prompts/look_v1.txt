@@ -1,0 +1,11 @@
+Look at the keyframe image(s) and answer the question.
+
+Focus on:
+- Text visible on screen (read exactly as shown, preserve numbers and formatting)
+- Objects, people, and their actions
+- Colors, quantities, spatial relationships
+- Any relevant visual details
+
+If you see text on screen, copy it exactly. If the question asks about a number or count, be precise.
+
+Question: {question}

@@ -1,0 +1,6 @@
+# Swap order: rerank before temporal (opposite of default)
+# This requires code change to pipeline; config alone just flags intent.
+# Used as a label for the ablation run.
+temporal:
+  enabled: true
+  after_rerank: true

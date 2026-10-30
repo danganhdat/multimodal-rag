@@ -1,20 +1,31 @@
-import type { SearchResult } from "../types";
+import type { SearchResult, V1SearchResult } from "../types";
 import KeyframeCard from "./KeyframeCard";
 
+type AnyResult = SearchResult | V1SearchResult;
+
 interface Props {
-  result: SearchResult;
+  result: AnyResult;
   rank: number;
   onClickKeyframe: (videoName: string, ptsTime: number) => void;
   onEnlargeImage: (imageUrl: string) => void;
+  upvoted?: boolean;
+  downvoted?: boolean;
+  onUpvote?: (id: string) => void;
+  onDownvote?: (id: string) => void;
 }
 
-export default function ResultRow({ result, rank, onClickKeyframe, onEnlargeImage }: Props) {
+export default function ResultRow({
+  result, rank, onClickKeyframe, onEnlargeImage,
+  upvoted, downvoted, onUpvote, onDownvote,
+}: Props) {
+  const sources = "sources" in result ? (result as V1SearchResult).sources : null;
+  const neighbors = result.neighbors ?? [];
   const allFrames = [
-    ...result.neighbors
+    ...neighbors
       .filter((n) => n.keyframe_idx < result.keyframe_idx)
       .map((n) => ({ idx: n.keyframe_idx, isMain: false, imageUrl: n.image_url, ptsTime: n.pts_time })),
-    { idx: result.keyframe_idx, isMain: true, imageUrl: result.image_url, ptsTime: result.pts_time },
-    ...result.neighbors
+    { idx: result.keyframe_idx, isMain: true, imageUrl: result.image_url, ptsTime: result.pts_time ?? 0 },
+    ...neighbors
       .filter((n) => n.keyframe_idx > result.keyframe_idx)
       .map((n) => ({ idx: n.keyframe_idx, isMain: false, imageUrl: n.image_url, ptsTime: n.pts_time })),
   ];
@@ -25,12 +36,9 @@ export default function ResultRow({ result, rank, onClickKeyframe, onEnlargeImag
         <div className="is-flex is-align-items-center" style={{ gap: "0.5rem" }}>
           <span className="tag is-dark">#{rank}</span>
           <span className="tag is-info">{result.video_name}</span>
-          <span className="tag is-warning">{result.score.toFixed(4)}</span>
-          {result.rerank_score !== null && (
-            <span className="tag is-success is-light">{result.rerank_score.toFixed(4)}</span>
-          )}
+          <span className="tag is-warning">{(result.score ?? 0).toFixed(4)}</span>
           <span className="tag is-light">
-            frame {result.frame_idx} | {result.pts_time.toFixed(1)}s
+            frame {result.frame_idx ?? 0} | {(result.pts_time ?? 0).toFixed(1)}s
           </span>
           <span
             className="tag is-dark"
@@ -41,17 +49,48 @@ export default function ResultRow({ result, rank, onClickKeyframe, onEnlargeImag
             ▶ Play
           </span>
         </div>
-        <div className="tags mb-0">
-          {result.objects.slice(0, 5).map((obj) => (
-            <span key={obj} className="tag is-light is-small">
-              {obj}
-            </span>
-          ))}
-          {result.objects.length > 5 && (
-            <span className="tag is-light is-small">
-              +{result.objects.length - 5}
-            </span>
+        <div className="is-flex is-align-items-center" style={{ gap: "0.25rem" }}>
+          {sources && (
+            <div className="tags mb-0 mr-2">
+              {Object.entries(sources).map(([src, r]) => (
+                <span key={src} className="tag is-light is-small" title={`${src} rank ${r}`}>
+                  {src}:{r}
+                </span>
+              ))}
+            </div>
           )}
+          {onUpvote && (
+            <button
+              className={`button is-small ${upvoted ? "is-success" : "is-light"}`}
+              onClick={() => onUpvote(result.id)}
+              title="Use as search signal"
+              style={{ minWidth: "28px", height: "24px", padding: "0 4px" }}
+            >
+              +
+            </button>
+          )}
+          {onDownvote && (
+            <button
+              className={`button is-small ${downvoted ? "is-danger" : "is-light"}`}
+              onClick={() => onDownvote(result.id)}
+              title="Penalize similar frames"
+              style={{ minWidth: "28px", height: "24px", padding: "0 4px" }}
+            >
+              -
+            </button>
+          )}
+          <div className="tags mb-0">
+            {result.objects.slice(0, 5).map((obj) => (
+              <span key={obj} className="tag is-light is-small">
+                {obj}
+              </span>
+            ))}
+            {result.objects.length > 5 && (
+              <span className="tag is-light is-small">
+                +{result.objects.length - 5}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       <div className="keyframe-strip">

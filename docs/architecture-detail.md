@@ -15,7 +15,7 @@ Hệ thống gồm ba lớp:
 | **Storage** | Milvus (Docker) | Cơ sở dữ liệu vector với HNSW index, lưu dual vectors + metadata |
 
 ```mermaid
-graph TB
+graph LR
     subgraph Frontend["Frontend (React + Vite + Bulma)"]
         UI["Giao diện tìm kiếm"]
         Sketch["Canvas vẽ Sketch"]
@@ -109,7 +109,7 @@ TSBIR (Text-Sketch-Based Image Retrieval) được fine-tune để encode cả t
 ## 3. Pipeline dữ liệu offline
 
 ```mermaid
-graph TD
+graph LR
     Videos["Videos (L21–L30)"] --> KFExtract["Trích xuất Keyframe\n(scene change detection)"]
     KFExtract --> JPGs["keyframes/{video}/{NNN}.jpg"]
     KFExtract --> Filter["Lọc frame trống\nmean>220 & std<30 → trắng\nmean<15 & std<10 → đen"]

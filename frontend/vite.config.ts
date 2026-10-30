@@ -1,5 +1,6 @@
 import { createReadStream, existsSync, statSync } from "fs";
 import { extname, join, resolve } from "path";
+import { fileURLToPath } from "url";
 import react from "@vitejs/plugin-react";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 
@@ -31,7 +32,7 @@ function serveLocal(route: string, dir: string): Plugin {
 }
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, resolve(__dirname, ".."), "");
+  const env = loadEnv(mode, resolve(fileURLToPath(new URL("..", import.meta.url))), "");
   const dataRoot = env.DATA_ROOT || "..";
   const keyframesDir = join(dataRoot, "keyframes");
 
